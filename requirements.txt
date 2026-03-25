@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-dotenv
+pymupdf
+python-pptx
+python-docx
+reportlab
+openai
+groq
+pinecone-client
+upstash-redis
+httpx

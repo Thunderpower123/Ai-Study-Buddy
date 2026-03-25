@@ -12,8 +12,17 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = ""
     PINECONE_API_KEY: str = ""
     PINECONE_INDEX_NAME: str = ""
-    UPSTASH_REDIS_URL: str = ""
-    UPSTASH_REDIS_TOKEN: str = ""
+
+    # Upstash Redis — variable names must match .env exactly
+    # Upstash's own SDK uses REST_URL / REST_TOKEN naming
+    UPSTASH_REDIS_REST_URL: str = ""
+    UPSTASH_REDIS_REST_TOKEN: str = ""
+
+    # Port the FastAPI server listens on (read in uvicorn launch or startup logs)
+    PORT: int = 8001
+
+    # URL of the Node backend — used for any callbacks if needed
+    BACKEND_URL: str = "http://localhost:8000"
 
     class Config:
         env_file = ".env"

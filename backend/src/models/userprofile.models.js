@@ -1,8 +1,11 @@
+import mongoose from "mongoose";
+
 const userProfileSchema = new mongoose.Schema({
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+        unique:true
     },
     branch: String,
     year: Number,
@@ -12,6 +15,6 @@ const userProfileSchema = new mongoose.Schema({
     bio: String,
     linkedinUrl: String,
     githubUrl: String,
-  }, { timestamps: true });
-  
-  export const userProfile= mongoose.model("UserProfile", userProfileSchema);
+}, { timestamps: true });
+
+export const UserProfile = mongoose.model("UserProfile", userProfileSchema); // FIXED: was userProfile (lowercase)

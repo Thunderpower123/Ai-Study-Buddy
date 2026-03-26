@@ -1,0 +1,274 @@
+/* ============================================
+   AUTH — AI STUDY BUDDY
+   Forest Desk (light) + Pure Void (dark)
+   ============================================ */
+
+/* ---- Container ---- */
+.auth-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background-color: var(--bg-primary);
+  transition: background-color 0.25s ease;
+  position: relative;
+}
+
+/* ---- Theme toggle ---- */
+.auth-theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.auth-theme-toggle:hover {
+  background: var(--accent-soft);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+/* ---- Card ---- */
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 40px 36px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+/* ---- View transition animations ---- */
+@keyframes viewFadeOut {
+  from { opacity: 1;  transform: translateY(0);    }
+  to   { opacity: 0;  transform: translateY(-10px); }
+}
+@keyframes viewFadeIn {
+  from { opacity: 0;  transform: translateY(10px); }
+  to   { opacity: 1;  transform: translateY(0);    }
+}
+.auth-view-out { animation: viewFadeOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards; }
+.auth-view-in  { animation: viewFadeIn  0.28s cubic-bezier(0, 0, 0.2, 1) forwards; }
+
+/* ---- Logo ---- */
+.auth-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.auth-logo-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.25s ease;
+}
+.auth-logo-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: var(--btn-text);
+}
+.auth-logo-name {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* ---- Header ---- */
+.auth-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+.auth-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.auth-switch-link {
+  color: var(--accent-primary);
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 3px;
+}
+.auth-switch-link:hover { text-decoration: underline; }
+
+/* ---- Error banner ---- */
+.auth-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(-4px);
+  animation: errIn 0.2s ease forwards;
+}
+@keyframes errIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Form ---- */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.form-input {
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.25s ease;
+}
+.form-input::placeholder { color: var(--text-muted); }
+.form-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  background: var(--bg-card);
+}
+.form-input.invalid {
+  border-color: var(--danger-text);
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.1);
+}
+
+/* ---- Primary button ---- */
+.btn-auth-primary {
+  height: 44px;
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--btn-primary-bg);
+  color: var(--btn-text);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+  letter-spacing: 0.01em;
+}
+.btn-auth-primary:hover:not(:disabled) { background: var(--btn-primary-hover); }
+.btn-auth-primary:active:not(:disabled) { transform: scale(0.99); }
+.btn-auth-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ---- Divider ---- */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+/* ---- Google button ---- */
+.btn-google {
+  height: 42px;
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn-google:hover {
+  background: var(--bg-primary);
+  border-color: var(--text-muted);
+}
+.btn-google svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+/* ---- Forgot password ---- */
+.forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -8px;
+}
+.forgot-link {
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.forgot-link:hover { color: var(--accent-primary); }
+
+/* ---- Responsive ---- */
+@media (max-width: 520px) {
+  .auth-card {
+    padding: 28px 20px;
+    box-shadow: none;
+    border: none;
+  }
+  .form-row { grid-template-columns: 1fr; }
+}

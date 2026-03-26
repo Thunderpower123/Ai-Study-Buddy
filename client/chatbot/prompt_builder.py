@@ -1,3 +1,5 @@
+from typing import Optional, List
+
 EXTENDED_KEYWORDS = [
     "explain further",
     "explain more",
@@ -33,6 +35,8 @@ Rules:
 - Do not use outside knowledge.
 - Be concise and accurate.
 
+{profile_section}
+
 NOTES:
 {context}
 """.strip()
@@ -50,9 +54,64 @@ Rules:
 - Use simple language, real world examples, and analogies where helpful.
 - Be thorough but not overwhelming.
 
+{profile_section}
+
 NOTES:
 {context}
 """.strip()
+
+
+def _build_profile_section(user_profile) -> str:
+    """
+    Builds the student profile block injected into the system prompt.
+
+    If no profile is provided (or all fields are empty), returns an empty string
+    so the prompt is unchanged — grounded/extended logic still works fine.
+
+    This is the feature that differentiates AI Study Buddy from NotebookLM:
+    every answer is tailored to the student's branch, year, and interests.
+
+    Example output:
+        STUDENT PROFILE:
+        - Branch: Electrical Engineering
+        - Year: 2nd year
+        - University: IIT Bombay
+        - Interests: circuits, machines
+        - Domains: Backend, Computer Vision
+        - Bio: Interested in power systems and IoT.
+
+    The LLM uses this to adjust explanation depth and pick relevant examples.
+    A 2nd-year EE student gets a circuit-level explanation of Fleming's rule.
+    A 4th-year CS student gets a more abstract, algorithm-oriented treatment.
+    """
+    if not user_profile:
+        return ""
+
+    lines = []
+
+    if user_profile.branch:
+        lines.append(f"- Branch: {user_profile.branch}")
+
+    if user_profile.year:
+        year_suffix = {1: "st", 2: "nd", 3: "rd"}.get(user_profile.year, "th")
+        lines.append(f"- Year: {user_profile.year}{year_suffix} year")
+
+    if user_profile.university:
+        lines.append(f"- University: {user_profile.university}")
+
+    if user_profile.interests:
+        lines.append(f"- Interests: {', '.join(user_profile.interests)}")
+
+    if user_profile.domains:
+        lines.append(f"- Domains: {', '.join(user_profile.domains)}")
+
+    if user_profile.bio:
+        lines.append(f"- Bio: {user_profile.bio}")
+
+    if not lines:
+        return ""
+
+    return "STUDENT PROFILE:\n" + "\n".join(lines)
 
 
 def detect_mode(question: str) -> str:
@@ -70,7 +129,7 @@ def detect_mode(question: str) -> str:
     return "grounded"
 
 
-def build_prompt(question: str, context: str, chat_history: list) -> tuple:
+def build_prompt(question: str, context: str, chat_history: list, user_profile=None) -> tuple:
     """
     Builds the full prompt to send to OpenAI.
 
@@ -78,6 +137,8 @@ def build_prompt(question: str, context: str, chat_history: list) -> tuple:
         question:     the user's latest message
         context:      the retrieved chunks from Pinecone (joined as a string)
         chat_history: list of past messages [{"role": "user"/"assistant", "content": "..."}]
+        user_profile: UserProfile object (optional) — injected into system prompt
+                      for personalised responses based on branch, year, interests
 
     Returns:
         A tuple of (messages_array, mode_used)
@@ -85,11 +146,18 @@ def build_prompt(question: str, context: str, chat_history: list) -> tuple:
     """
 
     mode = detect_mode(question)
+    profile_section = _build_profile_section(user_profile)
 
     if mode == "extended":
-        system_prompt = EXTENDED_SYSTEM_PROMPT.format(context=context)
+        system_prompt = EXTENDED_SYSTEM_PROMPT.format(
+            context=context,
+            profile_section=profile_section
+        )
     else:
-        system_prompt = GROUNDED_SYSTEM_PROMPT.format(context=context)
+        system_prompt = GROUNDED_SYSTEM_PROMPT.format(
+            context=context,
+            profile_section=profile_section
+        )
 
     # Start with system message
     messages = [

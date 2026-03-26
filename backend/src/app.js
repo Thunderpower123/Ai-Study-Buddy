@@ -21,9 +21,8 @@ app.use(cookieParser());
 // --------------------
 // Routes
 // --------------------
-// TODO: mount routers here as they are built
-// import authRouter from "./routes/auth.route.js";
-// app.use("/api/auth", authRouter);
+import authRouter from "./routes/auth.route.js";
+app.use("/api/auth", authRouter);
 
 // --------------------
 // Health check

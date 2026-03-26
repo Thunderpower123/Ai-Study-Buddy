@@ -1,12 +1,13 @@
 fastapi
 uvicorn
 python-dotenv
+pydantic-settings
 pymupdf
 python-pptx
 python-docx
 reportlab
 openai
 groq
-pinecone-client
+pinecone
 upstash-redis
 httpx

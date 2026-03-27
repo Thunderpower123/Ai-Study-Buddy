@@ -1,7 +1,10 @@
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(env_file=".env")
+
     # Required — app will crash on startup if missing
     # This is intentional: you cannot run the client without a service key
     SERVICE_KEY: str
@@ -23,9 +26,6 @@ class Settings(BaseSettings):
 
     # URL of the Node backend — used for any callbacks if needed
     BACKEND_URL: str = "http://localhost:8000"
-
-    class Config:
-        env_file = ".env"
 
 
 # Single instance — every other file imports this object

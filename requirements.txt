@@ -11,3 +11,8 @@ groq
 pinecone
 upstash-redis
 httpx
+pytest 
+pytest-asyncio 
+httpx 
+numpy
+

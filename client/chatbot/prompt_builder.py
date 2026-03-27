@@ -26,14 +26,26 @@ EXTENDED_KEYWORDS = [
 
 GROUNDED_SYSTEM_PROMPT = """
 You are a study assistant. Your job is to answer the student's questions
-strictly based on the notes provided below.
+primarily based on the notes provided below.
 
 Rules:
-- Only use information from the provided notes to answer.
+- Base your answer primarily on the notes.
 - If the answer is not found in the notes, say clearly:
   "I could not find that in your notes."
-- Do not use outside knowledge.
-- Be concise and accurate.
+- You may add minimal explanation ONLY to clarify concepts.
+- Do NOT introduce new concepts not present in notes.
+- Be concise, accurate, and structured.
+
+Structure your answer strictly as:
+
+From your notes:
+...
+
+Explanation:
+...
+
+(Optional) Additional clarification:
+...
 
 {profile_section}
 
@@ -43,16 +55,27 @@ NOTES:
 
 EXTENDED_SYSTEM_PROMPT = """
 You are a study assistant helping a student understand a topic more deeply.
-The student has asked for a further explanation beyond what their notes say.
 
 Rules:
 - Start your answer using the provided notes as the foundation.
 - Then extend the explanation using your general knowledge.
-- Clearly distinguish what comes from their notes vs your general knowledge.
-  Use phrases like "Your notes mention..." for note-based content,
-  and "Beyond your notes..." or "In general..." for extended knowledge.
-- Use simple language, real world examples, and analogies where helpful.
-- Be thorough but not overwhelming.
+- Clearly distinguish what comes from the notes vs general knowledge.
+- Use phrases like:
+  - "Your notes mention..." (for note-based content)
+  - "Beyond your notes..." or "In general..." (for extended content)
+- Use simple explanations, real-world examples, and intuition.
+- Keep answers structured and easy to follow.
+
+Structure your answer as:
+
+From your notes:
+...
+
+Extended explanation:
+...
+
+Example / intuition (if helpful):
+...
 
 {profile_section}
 
@@ -62,28 +85,6 @@ NOTES:
 
 
 def _build_profile_section(user_profile) -> str:
-    """
-    Builds the student profile block injected into the system prompt.
-
-    If no profile is provided (or all fields are empty), returns an empty string
-    so the prompt is unchanged — grounded/extended logic still works fine.
-
-    This is the feature that differentiates AI Study Buddy from NotebookLM:
-    every answer is tailored to the student's branch, year, and interests.
-
-    Example output:
-        STUDENT PROFILE:
-        - Branch: Electrical Engineering
-        - Year: 2nd year
-        - University: IIT Bombay
-        - Interests: circuits, machines
-        - Domains: Backend, Computer Vision
-        - Bio: Interested in power systems and IoT.
-
-    The LLM uses this to adjust explanation depth and pick relevant examples.
-    A 2nd-year EE student gets a circuit-level explanation of Fleming's rule.
-    A 4th-year CS student gets a more abstract, algorithm-oriented treatment.
-    """
     if not user_profile:
         return ""
 
@@ -115,13 +116,6 @@ def _build_profile_section(user_profile) -> str:
 
 
 def detect_mode(question: str) -> str:
-    """
-    Detects whether the user wants a grounded answer (from notes only)
-    or an extended explanation (notes + general knowledge).
-
-    Returns:
-        "grounded" or "extended"
-    """
     q = question.lower()
     for keyword in EXTENDED_KEYWORDS:
         if keyword in q:
@@ -129,21 +123,12 @@ def detect_mode(question: str) -> str:
     return "grounded"
 
 
-def build_prompt(question: str, context: str, chat_history: list, user_profile=None) -> tuple:
-    """
-    Builds the full prompt to send to OpenAI.
-
-    Args:
-        question:     the user's latest message
-        context:      the retrieved chunks from Pinecone (joined as a string)
-        chat_history: list of past messages [{"role": "user"/"assistant", "content": "..."}]
-        user_profile: UserProfile object (optional) — injected into system prompt
-                      for personalised responses based on branch, year, interests
-
-    Returns:
-        A tuple of (messages_array, mode_used)
-        messages_array is what gets sent directly to OpenAI chat completions
-    """
+def build_prompt(
+    question: str,
+    context: str,
+    chat_history: List[dict],
+    user_profile=None
+) -> tuple:
 
     mode = detect_mode(question)
     profile_section = _build_profile_section(user_profile)
@@ -159,16 +144,20 @@ def build_prompt(question: str, context: str, chat_history: list, user_profile=N
             profile_section=profile_section
         )
 
-    # Start with system message
+    # Clean up double blank lines when profile_section is empty
+    import re
+    system_prompt = re.sub(r'\n{3,}', '\n\n', system_prompt).strip()
+
+    # System message
     messages = [
         {"role": "system", "content": system_prompt}
     ]
 
-    # Add last 10 messages of chat history for context
-    recent_history = chat_history[-10:] if len(chat_history) > 10 else chat_history
+    # 🔥 Reduced history (better signal-to-noise)
+    recent_history = chat_history[-6:] if len(chat_history) > 6 else chat_history
     messages.extend(recent_history)
 
-    # Add the current user question
+    # Current user question
     messages.append({"role": "user", "content": question})
 
     return messages, mode

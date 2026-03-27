@@ -77,9 +77,9 @@ async def save_chat_history(session_id: str, messages: List[Dict]) -> None:
         payload = json.dumps(messages)
 
         # Upstash SET with expiration (ex=seconds)
-        await asyncio.to_thread(redis.set, key, payload, ex=900)
+        await asyncio.to_thread(redis.set, key, payload, ex=3600)
 
-        logger.info(f"Chat history saved for session={session_id} (TTL=900s)")
+        logger.info(f"Chat history saved for session={session_id} (TTL=3600s)")
 
     except Exception as e:
         logger.error(f"Error saving chat history for session={session_id}: {e}")

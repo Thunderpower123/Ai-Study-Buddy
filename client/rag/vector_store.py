@@ -119,6 +119,7 @@ async def search_vectors(
             vector=query_vector,
             top_k=top_k,
             include_metadata=True,
+            include_values=True,
             namespace=session_id
         )
 
@@ -137,9 +138,10 @@ async def search_vectors(
 
             results.append({
                 "text": metadata.get("text", ""),
-                "filename": metadata.get("filename", ""),  # now correctly stored
+                "filename": metadata.get("filename", ""),
                 "score": score,
-                "chunk_index": metadata.get("chunk_index", -1)
+                "chunk_index": metadata.get("chunk_index", -1),
+                "vector": match.values if match.values else []
             })
 
         logger.info(f"Search complete: {len(results)} results above threshold.")

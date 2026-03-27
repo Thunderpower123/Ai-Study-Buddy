@@ -12,17 +12,6 @@ logger = get_logger(__name__)
 
 
 async def run_chat(body: QueryRequest) -> QueryResponse:
-    """
-    Main chat pipeline:
-
-    1. Load chat history (Redis)
-    2. Retrieve relevant chunks (RAG)
-    3. Build prompt (mode + context + history + userProfile)
-    4. Call OpenAI (LLM)
-    5. Update chat history
-    6. Save back to Redis
-    7. Return structured response
-    """
 
     try:
         logger.info(f"Chat request received | session={body.sessionId}")
@@ -31,18 +20,24 @@ async def run_chat(body: QueryRequest) -> QueryResponse:
         chat_history: List[dict] = await get_chat_history(body.sessionId)
         logger.info(f"Loaded chat history: {len(chat_history)} messages")
 
-        # Step 2: Retrieve chunks (context, sources, confidence)
+        # Step 2: Retrieval (pass history now)
         context, sources_raw, confidence = await retrieve_chunks(
             body.question,
-            body.sessionId
+            body.sessionId,
+            chat_history
         )
 
-        if not context:
-            logger.info("No context retrieved — proceeding with empty context.")
+        # 🔥 HARD ANTI-HALLUCINATION STOP
+        if not context.strip():
+            return QueryResponse(
+                success=True,
+                answer="I could not find this in your notes.",
+                mode="grounded",
+                sources=[],
+                confidence="low"
+            )
 
         # Step 3: Build prompt
-        # FIX: pass body.userProfile so the system prompt is personalised
-        # to the student's branch, year, and interests
         messages, mode = build_prompt(
             body.question,
             context,
@@ -52,23 +47,24 @@ async def run_chat(body: QueryRequest) -> QueryResponse:
 
         logger.info(f"Prompt built | mode={mode} | messages={len(messages)}")
 
-        # Step 4: Call OpenAI
+        # Step 4: LLM
         answer = await get_chat_response(messages)
 
         if not answer:
             logger.warning("Empty response from LLM.")
 
-        # Step 5: Update chat history
-        updated_history = chat_history + [
-            {"role": "user", "content": body.question},
-            {"role": "assistant", "content": answer}
-        ]
+        # Step 5: Update history (only if answer is non-empty)
+        if answer:
+            updated_history = chat_history + [
+                {"role": "user", "content": body.question},
+                {"role": "assistant", "content": answer}
+            ]
+            # Step 6: Save Redis
+            await save_chat_history(body.sessionId, updated_history)
+        else:
+            logger.warning("Empty LLM answer — chat history NOT updated.")
 
-        # Step 6: Save updated history to Redis
-        await save_chat_history(body.sessionId, updated_history)
-        logger.info("Chat history updated and saved.")
-
-        # Step 7: Convert sources to Source objects
+        # Step 7: Sources
         sources = [
             Source(
                 filename=s.get("filename", ""),
@@ -77,7 +73,6 @@ async def run_chat(body: QueryRequest) -> QueryResponse:
             for s in sources_raw
         ]
 
-        # Step 8: Return response
         return QueryResponse(
             success=True,
             answer=answer,
@@ -89,7 +84,6 @@ async def run_chat(body: QueryRequest) -> QueryResponse:
     except Exception as e:
         logger.error(f"Chat pipeline failed: {e}")
 
-        # Fail-safe response (important for frontend stability)
         return QueryResponse(
             success=False,
             answer="Something went wrong while processing your request.",

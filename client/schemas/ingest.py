@@ -11,12 +11,18 @@ class IngestRequest(BaseModel):
         to bytes here in Python before passing it to the extractor.
 
     filename: The original filename e.g. "chapter3.pdf"
+        For pasted raw text, Node sends a generated name like "pasted-notes.txt".
         Stored in Pinecone metadata so we can show the student which file
         an answer came from (source citations feature).
 
-    mimetype: e.g. "application/pdf", "application/vnd.openxmlformats..."
-        Tells us which extractor to use — PDF, PPTX, or DOCX.
-        We could infer from the extension but mimetype is more reliable.
+    mimetype: Tells us which extractor to use. Supported values:
+        - "application/pdf"                                                  → PDF extractor
+        - "application/vnd.openxmlformats-officedocument.presentationml.presentation" → PPTX extractor
+        - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"   → DOCX extractor
+        - "text/plain"                                                       → plain text extractor
+        - "text/markdown"                                                    → plain text extractor
+        We use mimetype rather than file extension because it's more reliable
+        (extensions can be renamed; mimetype comes from the browser/Node).
 
     sessionId: The MongoDB session ID this document belongs to.
         Used as the Pinecone namespace so each session's vectors are isolated.

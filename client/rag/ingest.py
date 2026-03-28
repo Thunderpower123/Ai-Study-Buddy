@@ -3,6 +3,7 @@ import base64
 from extractor.pdf_extractor import extract_pdf
 from extractor.pptx_extractor import extract_pptx
 from extractor.docx_extractor import extract_docx
+from extractor.text_extractor import extract_text
 from extractor.chunker import chunk_text
 
 from rag.embeddings import embed_chunks
@@ -19,10 +20,11 @@ async def run_ingest(body: IngestRequest) -> int:
     Full ingestion pipeline:
 
     1. Decode base64 → bytes
-    2. Extract text (PDF / PPTX / DOCX)
-    3. Chunk text
-    4. Generate embeddings
-    5. Upsert vectors to Pinecone (with filename stored in metadata)
+    2. Extract text (PDF / PPTX / DOCX / plain text)
+    3. [STUB] Groq symbol restoration — add here when ready (Tier 1 polish)
+    4. Chunk text
+    5. Generate embeddings
+    6. Upsert vectors to Pinecone (with filename stored in metadata)
 
     Returns:
         int: number of chunks stored
@@ -57,6 +59,10 @@ async def run_ingest(body: IngestRequest) -> int:
             logger.info("Using DOCX extractor.")
             text = extract_docx(file_bytes)
 
+        elif mimetype in ("text/plain", "text/markdown"):
+            logger.info("Using plain text extractor.")
+            text = extract_text(file_bytes)
+
         else:
             logger.error(f"Unsupported mimetype: {mimetype}")
             raise ValueError(f"Unsupported mimetype: {mimetype}")
@@ -67,7 +73,15 @@ async def run_ingest(body: IngestRequest) -> int:
 
         logger.info(f"Text extraction complete. Length: {len(text)} characters.")
 
-        # Step 3: Chunk text
+        # Step 3: Groq symbol restoration (Tier 1 polish — add when sessions/upload are wired)
+        # Restores corrupted engineering symbols (α, β, ω, Ω, μ) that PyMuPDF mangles.
+        # Only needed for PDF — skip for PPTX, DOCX, and plain text.
+        # To enable:
+        #   from extractor.symbol_restorer import restore_symbols
+        #   if mimetype == "application/pdf":
+        #       text = await restore_symbols(text)
+
+        # Step 4: Chunk text
         chunks = chunk_text(text)
 
         if not chunks:
@@ -76,7 +90,7 @@ async def run_ingest(body: IngestRequest) -> int:
 
         logger.info(f"Chunking complete: {len(chunks)} chunks created.")
 
-        # Step 4: Generate embeddings
+        # Step 5: Generate embeddings
         vectors = await embed_chunks(chunks)
 
         if not vectors:
@@ -85,8 +99,7 @@ async def run_ingest(body: IngestRequest) -> int:
 
         logger.info(f"Embeddings generated: {len(vectors)} vectors.")
 
-        # Step 5: Upsert to Pinecone
-        # FIX: pass body.filename so it's stored in metadata for source citations
+        # Step 6: Upsert to Pinecone
         stored_count = await upsert_vectors(
             session_id=body.sessionId,
             document_id=body.documentId,

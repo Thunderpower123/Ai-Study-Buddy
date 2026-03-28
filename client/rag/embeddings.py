@@ -4,21 +4,22 @@ from llm.openai_client import get_embeddings_batch
 
 logger = get_logger(__name__)
 
-# OpenAI supports up to 2048 inputs per batch call.
-# We use 500 to stay well within rate limits and avoid oversized requests.
-BATCH_SIZE = 500
+# OpenAI supports up to 2048 inputs per batch call but has a 300,000 token
+# per request limit. The 8051 Mazidi book chunks average ~660 tokens each,
+# so 50 chunks per batch stays safely under the limit (50 × 660 = ~33,000).
+BATCH_SIZE = 50
 
 
 async def embed_chunks(chunks: List[str]) -> List[List[float]]:
     """
     Generates embeddings for a list of text chunks using batch API calls.
 
-    - Sends chunks in batches of BATCH_SIZE (default 500)
+    - Sends chunks in batches of BATCH_SIZE (50)
     - One API call per batch instead of one per chunk (major speed win)
     - Skips any chunk that returns an empty embedding
     - Returns list of embedding vectors in the same order as input chunks
 
-    Example: 120 chunks → 1 API call instead of 120.
+    Example: 455 chunks → 10 API calls instead of 455.
     """
     vectors: List[List[float]] = []
     total = len(chunks)

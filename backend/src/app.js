@@ -2,6 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
+import studentRoutes from "./routes/student.route.js";
+import profileRoutes from "./routes/profile.route.js";
+import chatRoutes from "./routes/chat.route.js";
+
+
 const app = express();
 
 // --------------------
@@ -17,13 +22,15 @@ app.use(cors({
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(cookieParser());
-
+   
 // --------------------
 // Routes
 // --------------------
 import authRouter from "./routes/auth.route.js";
 app.use("/api/auth", authRouter);
-
+app.use("/api", studentRoutes);   // → POST/GET /api/student-details
+app.use("/api", profileRoutes);   // → GET/PUT  /api/profile
+app.use("/api", chatRoutes); 
 // --------------------
 // Health check
 // --------------------

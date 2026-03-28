@@ -12,9 +12,6 @@ const userProfileSchema = new mongoose.Schema({
     university: String,
     interests: [String],
     domains: [String],
-    bio: String,
-    linkedinUrl: String,
-    githubUrl: String,
 }, { timestamps: true });
 
 export const UserProfile = mongoose.model("UserProfile", userProfileSchema); // FIXED: was userProfile (lowercase)

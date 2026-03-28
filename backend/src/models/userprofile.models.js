@@ -5,16 +5,16 @@ const userProfileSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true,
-        unique:true
+        unique: true
     },
-    branch: String,
-    year: Number,
-    university: String,
-    interests: [String],
-    domains: [String],
-    bio: String,
-    linkedinUrl: String,
-    githubUrl: String,
+    branch:      { type: String, default: "" },
+    year:        { type: Number },
+    university:  { type: String, default: "" },
+    bio:         { type: String, default: "" },
+    interests:   { type: [String], default: [] },
+    domains:     { type: [String], default: [] },
+    linkedinUrl: { type: String, default: "" },
+    githubUrl:   { type: String, default: "" },
 }, { timestamps: true });
 
-export const UserProfile = mongoose.model("UserProfile", userProfileSchema); // FIXED: was userProfile (lowercase)
+export const UserProfile = mongoose.model("UserProfile", userProfileSchema);

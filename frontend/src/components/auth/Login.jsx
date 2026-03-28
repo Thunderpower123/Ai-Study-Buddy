@@ -32,7 +32,6 @@ export default function Login({ onSwitchToRegister }) {
   const [error,         setError]         = useState('');
   const [form,          setForm]          = useState({ email: '', password: '' });
 
-  // Ref to the hidden GoogleLogin button div so we can click it programmatically
   const googleBtnRef = useRef(null);
 
   // ---------------- GOOGLE ----------------
@@ -40,12 +39,13 @@ export default function Login({ onSwitchToRegister }) {
     try {
       setGoogleLoading(true);
       setError('');
+      // googleLogin wraps credential in { idToken } automatically
       const res = await googleLogin(credentialResponse.credential);
-      if (res.success) {
-        setUser(res.user);
+      if (res.data?.success) {
+        setUser(res.data.user);
         navigate('/dashboard');
       } else {
-        setError(res.message || 'Google login failed');
+        setError(res.data?.message || 'Google login failed');
       }
     } catch {
       setError('Google login failed. Please try again.');
@@ -59,7 +59,6 @@ export default function Login({ onSwitchToRegister }) {
     setGoogleLoading(false);
   };
 
-  // Click the hidden Google button to trigger the real OAuth popup
   const triggerGooglePopup = () => {
     setError('');
     const btn = googleBtnRef.current?.querySelector('div[role="button"]');
@@ -78,14 +77,14 @@ export default function Login({ onSwitchToRegister }) {
     try {
       setIsLoading(true);
       const res = await loginUser(form);
-      if (res.success) {
-        setUser(res.user);
+      if (res.data?.success) {
+        setUser(res.data.user);
         navigate('/dashboard');
       } else {
-        setError(res.message || 'Login failed');
+        setError(res.data?.message || 'Login failed');
       }
-    } catch {
-      setError('Server error');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Server error');
     } finally {
       setIsLoading(false);
     }
@@ -122,7 +121,6 @@ export default function Login({ onSwitchToRegister }) {
 
       <div className="auth-divider">or continue with</div>
 
-      {/* Visible themed button — triggers the hidden real Google button */}
       <button
         className="btn-google"
         type="button"

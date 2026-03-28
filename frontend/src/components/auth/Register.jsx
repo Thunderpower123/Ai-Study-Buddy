@@ -40,11 +40,11 @@ export default function Register({ onSwitchToLogin }) {
       setGoogleLoading(true);
       setError('');
       const res = await googleLogin(credentialResponse.credential);
-      if (res.success) {
-        setUser(res.user);
+      if (res.data?.success) {
+        setUser(res.data.user);
         navigate('/dashboard');
       } else {
-        setError(res.message || 'Google signup failed');
+        setError(res.data?.message || 'Google signup failed');
       }
     } catch {
       setError('Google signup failed. Please try again.');
@@ -82,13 +82,14 @@ export default function Register({ onSwitchToLogin }) {
         age: Number(form.age),
         password: form.password,
       });
-      if (res.success) {
+      if (res.data?.success) {
+        // Registration successful — switch to login view
         onSwitchToLogin();
       } else {
-        setError(res.message || 'Registration failed');
+        setError(res.data?.message || 'Registration failed');
       }
-    } catch {
-      setError('Server error');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Server error');
     } finally {
       setIsLoading(false);
     }
@@ -141,7 +142,6 @@ export default function Register({ onSwitchToLogin }) {
 
       <div className="auth-divider">or continue with</div>
 
-      {/* Visible themed button — triggers the hidden real Google button */}
       <button
         className="btn-google"
         type="button"

@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  height: 60px;
+  background: #0a0a14;
+  border-bottom: 1px solid #1a1a2e;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: #a78bfa;
+  letter-spacing: -0.02em;
+}
+
+.mode-toggle {
+  display: flex;
+  background: #111122;
+  border: 1px solid #1e1e35;
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+.mode-btn {
+  padding: 0.35rem 1rem;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #6b6b8a;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mode-btn.active {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.pfp-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 2px solid #7c3aed44;
+  background: #141425;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s;
+}
+.pfp-btn:hover { border-color: #7c3aed; }
+.pfp-img { width: 100%; height: 100%; object-fit: cover; }
+.pfp-initials {
+  color: #a78bfa;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.pfp-dropdown {
+  position: absolute;
+  top: 54px; right: 1.5rem;
+  background: #0f0f1a;
+  border: 1px solid #1e1e35;
+  border-radius: 14px;
+  width: 200px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px #00000066;
+  animation: dropIn 0.15s ease;
+}
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.pfp-dropdown-header {
+  padding: 0.9rem 1rem 0.7rem;
+  border-bottom: 1px solid #1e1e35;
+}
+.pfp-name { color: #fff; font-weight: 600; font-size: 0.9rem; margin: 0 0 2px; }
+.pfp-email { color: #6b6b8a; font-size: 0.78rem; margin: 0; }
+.pfp-dropdown button {
+  display: block; width: 100%;
+  padding: 0.6rem 1rem;
+  background: none; border: none;
+  color: #c4c4d8;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  text-align: left; cursor: pointer;
+  transition: background 0.15s;
+}
+.pfp-dropdown button:hover { background: #141425; }
+.pfp-dropdown hr { border: none; border-top: 1px solid #1e1e35; margin: 4px 0; }
+.logout-btn { color: #f87171 !important; }

@@ -2,6 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
+import authRouter    from "./routes/auth.route.js";
+import studentRoutes from "./routes/student.route.js";
+import profileRoutes from "./routes/profile.route.js";
+import chatRoutes    from "./routes/chat.route.js";
+
 const app = express();
 
 // --------------------
@@ -21,8 +26,17 @@ app.use(cookieParser());
 // --------------------
 // Routes
 // --------------------
-import authRouter from "./routes/auth.route.js";
-app.use("/api/auth", authRouter);
+// Auth: /api/users/register  /api/users/login  /api/users/google  etc.
+app.use("/api/users", authRouter);
+
+// Student details: /api/student-details
+app.use("/api", studentRoutes);
+
+// Profile: /api/profile
+app.use("/api", profileRoutes);
+
+// Chat: /api/chat/:sessionId
+app.use("/api", chatRoutes);
 
 // --------------------
 // Health check

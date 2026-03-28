@@ -1,11 +1,16 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import multer from 'multer';
 
 import authRouter    from "./routes/auth.route.js";
 import studentRoutes from "./routes/student.route.js";
 import profileRoutes from "./routes/profile.route.js";
 import chatRoutes    from "./routes/chat.route.js";
+import sessionRoutes from "./routes/session.route.js";
+import documentRoutes from "./routes/document.route.js";
+
+
 
 const app = express();
 
@@ -19,8 +24,12 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization", "x-service-key"],
 }));
 
-app.use(express.json({ limit: "16kb" }));
-app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+// JSON limit: chat messages and profile data are small.
+// Files come through multer (memoryStorage) which bypasses this middleware,
+// so this limit does NOT affect file uploads — multer handles those separately.
+// 1mb is plenty for any JSON payload this app will ever send.
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
 
 // --------------------
@@ -38,6 +47,9 @@ app.use("/api", profileRoutes);
 // Chat: /api/chat/:sessionId
 app.use("/api", chatRoutes);
 
+app.use("/api", sessionRoutes);
+app.use("/api", documentRoutes);
+
 // --------------------
 // Health check
 // --------------------
@@ -53,6 +65,28 @@ app.use((req, res) => {
         success: false,
         message: `Route ${req.originalUrl} not found`,
     });
+});
+
+// --------------------
+// Multer error handler
+// --------------------
+// Multer throws MulterError synchronously during file processing — it bypasses
+// asyncHandler entirely and lands here. Must be caught before the global handler
+// so we return a proper JSON shape instead of Express's default HTML error page.
+app.use((err, req, res, next) => {
+    if (err instanceof multer.MulterError) {
+        // e.g. LIMIT_FILE_SIZE, LIMIT_FILE_COUNT, LIMIT_UNEXPECTED_FILE
+        const messages = {
+            LIMIT_FILE_SIZE:      "File too large. Maximum size per file is 100 MB.",
+            LIMIT_FILE_COUNT:     "Too many files. Maximum is 20 files per upload.",
+            LIMIT_UNEXPECTED_FILE: `Unexpected field name '${err.field}'. Use 'files' as the field name.`,
+        };
+        return res.status(400).json({
+            success: false,
+            message: messages[err.code] || `Upload error: ${err.message}`,
+        });
+    }
+    next(err);
 });
 
 // --------------------

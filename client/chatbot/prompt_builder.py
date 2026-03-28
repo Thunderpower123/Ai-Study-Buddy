@@ -1,3 +1,4 @@
+import re
 from typing import Optional, List
 
 EXTENDED_KEYWORDS = [
@@ -90,8 +91,17 @@ def _build_profile_section(user_profile) -> str:
 
     lines = []
 
-    if user_profile.branch:
-        lines.append(f"- Branch: {user_profile.branch}")
+    # Education level + stream (from StudentDetails)
+    if user_profile.education:
+        lines.append(f"- Education level: {user_profile.education}")
+
+    if user_profile.stream:
+        lines.append(f"- Stream: {user_profile.stream}")
+
+    # Branch / course branch — prefer UserProfile.branch, fall back to StudentDetails.courseBranch
+    branch = user_profile.branch or user_profile.courseBranch
+    if branch:
+        lines.append(f"- Branch / specialisation: {branch}")
 
     if user_profile.year:
         year_suffix = {1: "st", 2: "nd", 3: "rd"}.get(user_profile.year, "th")
@@ -145,7 +155,6 @@ def build_prompt(
         )
 
     # Clean up double blank lines when profile_section is empty
-    import re
     system_prompt = re.sub(r'\n{3,}', '\n\n', system_prompt).strip()
 
     # System message

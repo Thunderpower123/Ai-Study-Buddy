@@ -97,6 +97,88 @@ async def upsert_vectors(
         raise
 
 
+async def delete_namespace(session_id: str) -> None:
+    """
+    Deletes the entire Pinecone namespace for a session.
+
+    Called when a session is deleted. Wipes ALL vectors across ALL documents
+    in that session in one shot. Pinecone namespaces are isolated, so this
+    does not touch any other session's data.
+    """
+    try:
+        logger.info(f"Deleting Pinecone namespace: {session_id}")
+
+        await asyncio.to_thread(
+            index.delete,
+            delete_all=True,
+            namespace=session_id
+        )
+
+        logger.info(f"Namespace deleted: {session_id}")
+
+    except Exception as e:
+        logger.error(f"Error deleting namespace {session_id}: {e}")
+        raise
+
+
+async def delete_by_document(session_id: str, document_id: str) -> int:
+    """
+    Deletes all Pinecone vectors belonging to a specific document.
+
+    Uses a metadata filter on documentId. Only touches vectors in the
+    given session namespace — other documents are untouched.
+
+    Returns:
+        int: number of vectors deleted (estimated from list before delete).
+
+    Note:
+    Pinecone's delete-by-metadata-filter requires a paid plan (P1+).
+    For Starter plan compatibility, we list vector IDs by prefix
+    (document_id-chunk-*) and delete by ID — safer and works on free tier.
+    """
+    try:
+        logger.info(f"Deleting vectors for document={document_id} in namespace={session_id}")
+
+        # List all vector IDs with this document's prefix
+        # Pinecone list() returns paginated results — iterate all pages
+        all_ids = []
+        prefix = f"{document_id}-chunk-"
+
+        list_response = await asyncio.to_thread(
+            index.list,
+            prefix=prefix,
+            namespace=session_id
+        )
+
+        # list() returns a generator of pages; each page has a list of IDs
+        for page in list_response:
+            all_ids.extend(page)
+
+        if not all_ids:
+            logger.warning(f"No vectors found for document={document_id} in namespace={session_id}")
+            return 0
+
+        logger.info(f"Found {len(all_ids)} vectors to delete for document={document_id}")
+
+        # Delete in batches of 1000 (Pinecone hard limit per delete call)
+        batch_size = 1000
+        for start in range(0, len(all_ids), batch_size):
+            batch = all_ids[start: start + batch_size]
+            await asyncio.to_thread(
+                index.delete,
+                ids=batch,
+                namespace=session_id
+            )
+            logger.info(f"Deleted batch {start + 1}–{start + len(batch)}")
+
+        logger.info(f"Delete complete: {len(all_ids)} vectors removed for document={document_id}")
+        return len(all_ids)
+
+    except Exception as e:
+        logger.error(f"Error deleting vectors for document={document_id}: {e}")
+        raise
+
+
 async def search_vectors(
     session_id: str,
     query_vector: List[float],

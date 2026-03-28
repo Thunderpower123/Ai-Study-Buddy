@@ -16,38 +16,56 @@ class UserProfile(BaseModel):
     """
     Academic profile of the student, sent by Node with every query.
 
-    Node fetches the UserProfile from MongoDB and attaches it to the
-    /query request body. The prompt builder injects it into the GPT
-    system prompt so answers are tailored to the student's level.
+    Node fetches UserProfile + StudentDetails from MongoDB and merges them
+    into a single profile object before sending here. All fields are Optional
+    — not every student will have filled their profile. The prompt builder
+    injects whatever is present into the GPT system prompt.
 
-    Example: A 2nd year EE student asking about Fleming's rule gets an
-    explanation at circuit level. A 4th year CS student gets a more
-    abstract treatment. NotebookLM cannot do this — it treats every
-    user identically.
+    Fields from UserProfile model:
+        branch, year, university, bio, interests, domains
 
-    All fields are Optional — not every student will have filled their profile.
-    If None, the prompt builder skips personalization and answers generically.
+    Fields from StudentDetails model (also sent by Node):
+        education, stream, courseBranch
     """
+    # From UserProfile
     branch: Optional[str] = None          # e.g. "Electrical Engineering"
     year: Optional[int] = None            # 1, 2, 3, or 4
     university: Optional[str] = None
     interests: Optional[List[str]] = []   # e.g. ["circuits", "machines"]
     domains: Optional[List[str]] = []     # e.g. ["Backend", "Computer Vision"]
     bio: Optional[str] = None
+    # From StudentDetails — Node merges these in before sending
+    education: Optional[str] = None       # e.g. "UG", "PG", "PhD"
+    stream: Optional[str] = None          # e.g. "Engineering"
+    courseBranch: Optional[str] = None    # e.g. "Computer Science"
 
 
 class QueryRequest(BaseModel):
     """
     Shape of the body Node sends to POST /query.
 
+    Node sends snake_case field names (session_id, user_profile).
+    Pydantic's model_config with populate_by_name allows both camelCase
+    and snake_case to be accepted so either format works.
+
     question: The student's message from the chat UI.
-    sessionId: Which session to search vectors in (Pinecone namespace).
-    userProfile: Academic context injected into the GPT system prompt.
+    sessionId / session_id: Which session to search vectors in (Pinecone namespace).
+    userProfile / user_profile: Academic context injected into the GPT system prompt.
         Optional — works fine without it, just not personalized.
     """
+    model_config = {"populate_by_name": True}
+
     question: str
-    sessionId: str
+    sessionId: Optional[str] = None
+    session_id: Optional[str] = None  # Node sends this
     userProfile: Optional[UserProfile] = None
+    user_profile: Optional[UserProfile] = None  # Node sends this
+
+    def get_session_id(self) -> str:
+        return self.sessionId or self.session_id or ""
+
+    def get_user_profile(self) -> Optional[UserProfile]:
+        return self.userProfile or self.user_profile
 
 
 class QueryResponse(BaseModel):

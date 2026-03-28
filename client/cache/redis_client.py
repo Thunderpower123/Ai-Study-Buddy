@@ -66,7 +66,7 @@ async def save_chat_history(session_id: str, messages: List[Dict]) -> None:
 
     - Key: session:{session_id}:messages
     - Value: JSON string of messages list
-    - TTL: 900 seconds
+    - TTL: 3600 seconds (1 hour)
 
     Uses asyncio.to_thread to avoid blocking the event loop.
     """
@@ -79,7 +79,7 @@ async def save_chat_history(session_id: str, messages: List[Dict]) -> None:
         # Upstash SET with expiration (ex=seconds)
         await asyncio.to_thread(redis.set, key, payload, ex=3600)
 
-        logger.info(f"Chat history saved for session={session_id} (TTL=3600s)")
+        logger.info(f"Chat history saved for session={session_id} (TTL=3600s / 1 hour)")
 
     except Exception as e:
         logger.error(f"Error saving chat history for session={session_id}: {e}")

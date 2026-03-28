@@ -37,19 +37,35 @@ const query = async ({ question, sessionId, userId, mode = "grounded" }) => {
     courseBranch: studentDetails?.courseBranch || null,
   };
 
-  const response = await fetch(`${PYTHON_CLIENT_URL}/query`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-service-key": SERVICE_KEY,
-    },
-    body: JSON.stringify({
-      question,
-      session_id: sessionId.toString(),
-      user_profile: profile,
-      mode,
-    }),
-  });
+  // AbortController gives us a proper timeout for fetch (fetch has none built-in)
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+  let response;
+  try {
+    response = await fetch(`${PYTHON_CLIENT_URL}/query`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-service-key": SERVICE_KEY,
+      },
+      body: JSON.stringify({
+        question,
+        session_id: sessionId.toString(),
+        user_profile: profile,
+        // mode is intentionally omitted — Python detects mode via keyword analysis
+        // sending it here was dead weight since Python's detect_mode() overrides it
+      }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err.name === "AbortError") {
+      throw new Error("Python client /query timed out after 30s");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     const text = await response.text();

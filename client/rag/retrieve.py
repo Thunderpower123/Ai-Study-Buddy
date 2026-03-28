@@ -59,8 +59,8 @@ async def retrieve_chunks(
         # Filter out chunks with no vector (can't do MMR without them)
         mmr_candidates = [r for r in deduped if r.get("vector")]
 
-        if not mmr_candidates:
-            # Fallback: just take top-5 by score
+        if not query_vector or not mmr_candidates:
+            # Fallback: just take top-5 by score if embedding failed or no vectors
             selected = sorted(deduped, key=lambda r: r.get("score", 0), reverse=True)[:5]
         else:
             selected = mmr_select(query_vector, mmr_candidates, top_k=5)

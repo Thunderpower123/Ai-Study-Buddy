@@ -91,11 +91,30 @@ async def run_ingest(body: IngestRequest) -> int:
         logger.info(f"Chunking complete: {len(chunks)} chunks created.")
 
         # Step 5: Generate embeddings
-        vectors = await embed_chunks(chunks)
+        # embed_chunks returns one vector per chunk, but skips empty chunks
+        # (returns [] for that position). We must align chunks and vectors
+        # before upserting — upsert_vectors requires equal-length lists.
+        raw_vectors = await embed_chunks(chunks)
 
-        if not vectors:
+        if not raw_vectors:
             logger.warning("Embedding step returned no vectors.")
             return 0
+
+        # Zip and filter: drop any chunk whose embedding came back empty
+        aligned = [(c, v) for c, v in zip(chunks, raw_vectors) if v]
+
+        if not aligned:
+            logger.warning("All embeddings were empty after filtering.")
+            return 0
+
+        aligned_chunks, vectors = zip(*aligned)
+        aligned_chunks = list(aligned_chunks)
+        vectors = list(vectors)
+
+        if len(aligned_chunks) < len(chunks):
+            logger.warning(
+                f"{len(chunks) - len(aligned_chunks)} chunks dropped due to empty embeddings."
+            )
 
         logger.info(f"Embeddings generated: {len(vectors)} vectors.")
 
@@ -104,7 +123,7 @@ async def run_ingest(body: IngestRequest) -> int:
             session_id=body.sessionId,
             document_id=body.documentId,
             filename=body.filename,
-            chunks=chunks,
+            chunks=aligned_chunks,
             vectors=vectors
         )
 

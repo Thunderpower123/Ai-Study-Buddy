@@ -133,7 +133,14 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
         return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    const decoded = jwt.verify(incomingToken, process.env.REFRESH_TOKEN_SECRET);
+    // jwt.verify throws on invalid/expired tokens — must catch and return 401
+    // Without this, asyncHandler catches it and the global error handler returns 500
+    let decoded;
+    try {
+        decoded = jwt.verify(incomingToken, process.env.REFRESH_TOKEN_SECRET);
+    } catch {
+        return res.status(401).json({ success: false, message: "Invalid or expired refresh token" });
+    }
 
     const user = await User.findById(decoded._id);
 

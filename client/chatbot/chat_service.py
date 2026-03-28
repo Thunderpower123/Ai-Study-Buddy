@@ -14,16 +14,19 @@ logger = get_logger(__name__)
 async def run_chat(body: QueryRequest) -> QueryResponse:
 
     try:
-        logger.info(f"Chat request received | session={body.sessionId}")
+        session_id = body.get_session_id()
+        user_profile = body.get_user_profile()
+
+        logger.info(f"Chat request received | session={session_id}")
 
         # Step 1: Load chat history
-        chat_history: List[dict] = await get_chat_history(body.sessionId)
+        chat_history: List[dict] = await get_chat_history(session_id)
         logger.info(f"Loaded chat history: {len(chat_history)} messages")
 
         # Step 2: Retrieval (pass history now)
         context, sources_raw, confidence = await retrieve_chunks(
             body.question,
-            body.sessionId,
+            session_id,
             chat_history
         )
 
@@ -42,7 +45,7 @@ async def run_chat(body: QueryRequest) -> QueryResponse:
             body.question,
             context,
             chat_history,
-            user_profile=body.userProfile
+            user_profile=user_profile
         )
 
         logger.info(f"Prompt built | mode={mode} | messages={len(messages)}")
@@ -60,7 +63,7 @@ async def run_chat(body: QueryRequest) -> QueryResponse:
                 {"role": "assistant", "content": answer}
             ]
             # Step 6: Save Redis
-            await save_chat_history(body.sessionId, updated_history)
+            await save_chat_history(session_id, updated_history)
         else:
             logger.warning("Empty LLM answer — chat history NOT updated.")
 

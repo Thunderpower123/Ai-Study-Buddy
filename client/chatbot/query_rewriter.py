@@ -23,7 +23,9 @@ async def rewrite_query(question: str, chat_history: list) -> str:
     context_block = f"Previous question: {last_user}\n"
     if last_assistant:
         # Truncate long assistant answers to first 300 chars to avoid token bloat
-        context_block += f"Assistant's answer (summary): {last_assistant[:300]}...\n"
+        summary = last_assistant[:300]
+        suffix = "..." if len(last_assistant) > 300 else ""
+        context_block += f"Assistant's answer (summary): {summary}{suffix}\n"
 
     prompt = [
         {

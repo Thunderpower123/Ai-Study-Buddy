@@ -40,6 +40,14 @@
   border-color: var(--accent-primary);
 }
 
+/* ---- Form wrapper (inside card) ---- */
+.auth-form-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 /* ---- Card ---- */
 .auth-card {
   width: 100%;
@@ -248,6 +256,22 @@
   height: 17px;
   flex-shrink: 0;
 }
+
+/* ---- Google button wrapper ---- */
+.google-btn-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/* ---- Switch link (sign up / log in) ---- */
+.auth-switch-link {
+  color: var(--accent-primary);
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 3px;
+}
+.auth-switch-link:hover { text-decoration: underline; }
 
 /* ---- Forgot password ---- */
 .forgot-row {

@@ -8,7 +8,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
+    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax"
 };
 
 // 🔧 helper
@@ -171,7 +171,6 @@ export const googleLogin = asyncHandler(async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-
     const { sub, email, name, picture, email_verified } = payload;
 
     if (!email_verified) {

@@ -1,8 +1,22 @@
-import React, { useState } from 'react';
-import { registerUser } from '../../utils/api';
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+import { registerUser, googleLogin } from '../../utils/api';
+import { useAuth } from '../../utils/AuthContext';
+
+const BrandLogo = () => (
+  <div className="auth-logo-row">
+    <div className="auth-logo-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+      </svg>
+    </div>
+    <span className="auth-logo-name">AI Study Buddy</span>
+  </div>
+);
 
 const GoogleIcon = () => (
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
@@ -10,22 +24,47 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const BrandLogo = () => (
-  <div className="auth-logo-row">
-    <div className="auth-logo-icon">
-      <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
-    </div>
-    <span className="auth-logo-name">AI Study Buddy</span>
-  </div>
-);
-
 export default function Register({ onSwitchToLogin }) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError]         = useState('');
-  const [form, setForm]           = useState({
-    name: '', email: '', age: '', password: '', confirmPassword: '',
-  });
+  const navigate    = useNavigate();
+  const { setUser } = useAuth();
+  const [isLoading,     setIsLoading]     = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error,         setError]         = useState('');
+  const [form, setForm] = useState({ name: '', email: '', age: '', password: '', confirmPassword: '' });
 
+  const googleBtnRef = useRef(null);
+
+  // ---------------- GOOGLE ----------------
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setGoogleLoading(true);
+      setError('');
+      const res = await googleLogin(credentialResponse.credential);
+      if (res.success) {
+        setUser(res.user);
+        navigate('/dashboard');
+      } else {
+        setError(res.message || 'Google signup failed');
+      }
+    } catch {
+      setError('Google signup failed. Please try again.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google sign-in was cancelled or failed. Please try again.');
+    setGoogleLoading(false);
+  };
+
+  const triggerGooglePopup = () => {
+    setError('');
+    const btn = googleBtnRef.current?.querySelector('div[role="button"]');
+    if (btn) btn.click();
+  };
+
+  // ---------------- FORM ----------------
   const handleChange = (e) => {
     setError('');
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -34,42 +73,32 @@ export default function Register({ onSwitchToLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (form.password !== form.confirmPassword) {
-      return setError('Passwords do not match.');
-    }
-
+    if (form.password !== form.confirmPassword) return setError('Passwords do not match.');
     try {
       setIsLoading(true);
       const res = await registerUser({
-        name:     form.name,
-        email:    form.email,
-        age:      Number(form.age),
+        name: form.name,
+        email: form.email,
+        age: Number(form.age),
         password: form.password,
       });
-
       if (res.success) {
-        onSwitchToLogin(); // go to login view
+        onSwitchToLogin();
       } else {
-        setError(res.message || 'Registration failed. Please try again.');
+        setError(res.message || 'Registration failed');
       }
     } catch {
-      setError('Server error. Please try again.');
+      setError('Server error');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleRegister = () => {
-    alert('Google sign-up coming soon! Please use email & password for now.');
-  };
-
   return (
-    <>
-      <BrandLogo />
-
+    <div className="auth-form-wrapper">
       <div className="auth-header">
-        <h1 className="auth-title">Create account</h1>
+        <BrandLogo />
+        <h1 className="auth-title">Sign Up</h1>
         <p className="auth-subtitle">
           Already have an account?
           <span className="auth-switch-link" onClick={onSwitchToLogin}> Log in</span>
@@ -77,64 +106,64 @@ export default function Register({ onSwitchToLogin }) {
       </div>
 
       <form className="auth-form" onSubmit={handleSubmit}>
-
-        {error && (
-          <div className="auth-error" role="alert">
-            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
-            </svg>
-            {error}
-          </div>
-        )}
+        {error && <div className="auth-error">{error}</div>}
 
         <div className="form-group">
           <label className="form-label">Full name</label>
-          <input type="text" name="name" className="form-input"
-            placeholder="Your name" value={form.name}
-            onChange={handleChange} required />
+          <input className="form-input" type="text" name="name" placeholder="e.g. John Doe" value={form.name} onChange={handleChange} required />
         </div>
 
-        <div className="form-row">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', gap: '16px' }}>
           <div className="form-group">
-            <label className="form-label">Email address</label>
-            <input type="email" name="email" className="form-input"
-              placeholder="you@example.com" value={form.email}
-              onChange={handleChange} required />
+            <label className="form-label">Email Address</label>
+            <input className="form-input" type="email" name="email" placeholder="name@example.com" value={form.email} onChange={handleChange} required />
           </div>
           <div className="form-group">
             <label className="form-label">Age</label>
-            <input type="number" name="age" className="form-input"
-              placeholder="e.g. 20" min="10" max="99"
-              value={form.age} onChange={handleChange} required />
+            <input className="form-input" type="number" name="age" placeholder="18+" min="1" value={form.age} onChange={handleChange} required />
           </div>
         </div>
 
         <div className="form-group">
           <label className="form-label">Password</label>
-          <input type="password" name="password" className="form-input"
-            placeholder="Min. 8 characters" value={form.password}
-            onChange={handleChange} required minLength={8} />
+          <input className="form-input" type="password" name="password" placeholder="••••••••" value={form.password} onChange={handleChange} required />
         </div>
 
         <div className="form-group">
-          <label className="form-label">Confirm password</label>
-          <input type="password" name="confirmPassword" className="form-input"
-            placeholder="••••••••" value={form.confirmPassword}
-            onChange={handleChange} required />
+          <label className="form-label">Confirm Password</label>
+          <input className="form-input" type="password" name="confirmPassword" placeholder="••••••••" value={form.confirmPassword} onChange={handleChange} required />
         </div>
 
-        <button type="submit" className="btn-auth-primary" disabled={isLoading}>
+        <button className="btn-auth-primary" type="submit" disabled={isLoading || googleLoading}>
           {isLoading ? 'Creating account...' : 'Create account'}
         </button>
-
-        <div className="auth-divider">or continue with</div>
-
-        <button type="button" className="btn-google" onClick={handleGoogleRegister}>
-          <GoogleIcon />
-          Continue with Google
-        </button>
-
       </form>
-    </>
+
+      <div className="auth-divider">or continue with</div>
+
+      {/* Visible themed button — triggers the hidden real Google button */}
+      <button
+        className="btn-google"
+        type="button"
+        onClick={triggerGooglePopup}
+        disabled={isLoading || googleLoading}
+      >
+        <GoogleIcon />
+        {googleLoading ? 'Connecting…' : 'Continue with Google'}
+      </button>
+
+      {/* Hidden GoogleLogin — handles the real OAuth flow, invisible to the user */}
+      <div
+        ref={googleBtnRef}
+        style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }}
+        aria-hidden="true"
+      >
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          useOneTap={false}
+        />
+      </div>
+    </div>
   );
 }

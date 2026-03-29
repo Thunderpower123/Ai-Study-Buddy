@@ -1,0 +1,148 @@
+================================================================
+  AI STUDY BUDDY — ALL COMMANDS REFERENCE
+================================================================
+  Run each service in its own terminal window/tab.
+  Order matters: start Backend -> Client -> Frontend.
+================================================================
+
+
+----------------------------------------------------------------
+  1. BACKEND  (Node.js + Express — port 8000)
+----------------------------------------------------------------
+
+  cd backend
+  npm run dev          <- development (nodemon, auto-restarts)
+  npm run start        <- production  (plain node, no restart)
+
+  Health check:
+    GET http://localhost:8000/health
+
+  API base:
+    http://localhost:8000/api/auth
+
+
+----------------------------------------------------------------
+  2. CLIENT  (Python FastAPI — port 8001)
+----------------------------------------------------------------
+
+  cd client
+
+  Activate virtual environment (do this every time):
+
+    Windows CMD:
+      venv\Scripts\activate
+
+    Windows PowerShell:
+      venv\Scripts\Activate.ps1
+
+  Install dependencies (first time only):
+    pip install -r requirements.txt          <- from root
+    OR
+    pip install -r ../requirements.txt       <- from inside /client
+
+  Run the server:
+    uvicorn main:app --reload --port 8001
+
+  Health check:
+    GET http://localhost:8001/health
+
+  Interactive API docs:
+    http://localhost:8001/docs
+
+
+----------------------------------------------------------------
+  3. FRONTEND  (React + Vite — port 5173)
+----------------------------------------------------------------
+
+  cd frontend
+  npm run dev          <- development (Vite dev server)
+  npm run build        <- production build (outputs to dist/)
+  npm run preview      <- preview the production build locally
+
+  Opens at:
+    http://localhost:5173
+
+
+----------------------------------------------------------------
+  4. TESTS  (pytest — run from inside /client with venv active)
+----------------------------------------------------------------
+
+  cd client
+  venv\Scripts\activate          <- activate venv first
+
+  Run all tests at once:
+    python -m pytest tests/ -v
+
+  Run individual test files:
+    python -m pytest tests/test_ingest.py -v       <- ingest pipeline
+    python -m pytest tests/test_retrieve.py -v     <- retrieval + MMR
+    python -m pytest tests/test_chatbot.py -v      <- chatbot + /query endpoint
+
+  WARNING — Run order for live tests:
+    1. Make sure the Python client server is running on :8001
+       (test_chatbot.py and test_ingest.py hit HTTP endpoints directly)
+    2. Run test_ingest.py FIRST — it seeds Pinecone with test data
+    3. Then run test_retrieve.py and test_chatbot.py
+       (they depend on the data seeded by test_ingest.py)
+
+  Run a single specific test by name:
+    python -m pytest tests/test_ingest.py::test_get_embedding_returns_vector -v
+    python -m pytest tests/test_chatbot.py::test_health_endpoint -v
+
+  Run only fast local tests (skip all live API calls):
+    python -m pytest tests/ -v -k "not asyncio"
+
+  Show print() output while running (useful for debugging):
+    python -m pytest tests/ -v -s
+
+
+----------------------------------------------------------------
+  5. STARTUP ORDER (recommended)
+----------------------------------------------------------------
+
+  Terminal 1 -> Backend
+    cd backend
+    npm run dev
+
+  Terminal 2 -> Client (Python)
+    cd client
+    venv\Scripts\activate
+    uvicorn main:app --reload --port 8001
+
+  Terminal 3 -> Frontend
+    cd frontend
+    npm run dev
+
+  Browser -> http://localhost:5173
+
+
+----------------------------------------------------------------
+  6. FIRST-TIME SETUP (fresh clone / new machine)
+----------------------------------------------------------------
+
+  Backend:
+    cd backend
+    npm install
+
+  Frontend:
+    cd frontend
+    npm install
+
+  Client (Python):
+    cd client
+    python -m venv venv
+    venv\Scripts\activate
+    pip install -r ../requirements.txt
+
+
+----------------------------------------------------------------
+  7. SERVICE URLS SUMMARY
+----------------------------------------------------------------
+
+  Frontend         ->  http://localhost:5173
+  Backend health   ->  http://localhost:8000/health
+  Backend API      ->  http://localhost:8000/api/auth
+  Python health    ->  http://localhost:8001/health
+  Python API docs  ->  http://localhost:8001/docs
+
+================================================================

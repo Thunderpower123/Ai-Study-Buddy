@@ -1,3 +1,6 @@
+import re
+from typing import Optional, List
+
 EXTENDED_KEYWORDS = [
     "explain further",
     "explain more",
@@ -24,14 +27,28 @@ EXTENDED_KEYWORDS = [
 
 GROUNDED_SYSTEM_PROMPT = """
 You are a study assistant. Your job is to answer the student's questions
-strictly based on the notes provided below.
+primarily based on the notes provided below.
 
 Rules:
-- Only use information from the provided notes to answer.
+- Base your answer primarily on the notes.
 - If the answer is not found in the notes, say clearly:
   "I could not find that in your notes."
-- Do not use outside knowledge.
-- Be concise and accurate.
+- You may add minimal explanation ONLY to clarify concepts.
+- Do NOT introduce new concepts not present in notes.
+- Be concise, accurate, and structured.
+
+Structure your answer strictly as:
+
+From your notes:
+...
+
+Explanation:
+...
+
+(Optional) Additional clarification:
+...
+
+{profile_section}
 
 NOTES:
 {context}
@@ -39,30 +56,76 @@ NOTES:
 
 EXTENDED_SYSTEM_PROMPT = """
 You are a study assistant helping a student understand a topic more deeply.
-The student has asked for a further explanation beyond what their notes say.
 
 Rules:
 - Start your answer using the provided notes as the foundation.
 - Then extend the explanation using your general knowledge.
-- Clearly distinguish what comes from their notes vs your general knowledge.
-  Use phrases like "Your notes mention..." for note-based content,
-  and "Beyond your notes..." or "In general..." for extended knowledge.
-- Use simple language, real world examples, and analogies where helpful.
-- Be thorough but not overwhelming.
+- Clearly distinguish what comes from the notes vs general knowledge.
+- Use phrases like:
+  - "Your notes mention..." (for note-based content)
+  - "Beyond your notes..." or "In general..." (for extended content)
+- Use simple explanations, real-world examples, and intuition.
+- Keep answers structured and easy to follow.
+
+Structure your answer as:
+
+From your notes:
+...
+
+Extended explanation:
+...
+
+Example / intuition (if helpful):
+...
+
+{profile_section}
 
 NOTES:
 {context}
 """.strip()
 
 
-def detect_mode(question: str) -> str:
-    """
-    Detects whether the user wants a grounded answer (from notes only)
-    or an extended explanation (notes + general knowledge).
+def _build_profile_section(user_profile) -> str:
+    if not user_profile:
+        return ""
 
-    Returns:
-        "grounded" or "extended"
-    """
+    lines = []
+
+    # Education level + stream (from StudentDetails)
+    if user_profile.education:
+        lines.append(f"- Education level: {user_profile.education}")
+
+    if user_profile.stream:
+        lines.append(f"- Stream: {user_profile.stream}")
+
+    # Branch / course branch — prefer UserProfile.branch, fall back to StudentDetails.courseBranch
+    branch = user_profile.branch or user_profile.courseBranch
+    if branch:
+        lines.append(f"- Branch / specialisation: {branch}")
+
+    if user_profile.year:
+        year_suffix = {1: "st", 2: "nd", 3: "rd"}.get(user_profile.year, "th")
+        lines.append(f"- Year: {user_profile.year}{year_suffix} year")
+
+    if user_profile.university:
+        lines.append(f"- University: {user_profile.university}")
+
+    if user_profile.interests:
+        lines.append(f"- Interests: {', '.join(user_profile.interests)}")
+
+    if user_profile.domains:
+        lines.append(f"- Domains: {', '.join(user_profile.domains)}")
+
+    if user_profile.bio:
+        lines.append(f"- Bio: {user_profile.bio}")
+
+    if not lines:
+        return ""
+
+    return "STUDENT PROFILE:\n" + "\n".join(lines)
+
+
+def detect_mode(question: str) -> str:
     q = question.lower()
     for keyword in EXTENDED_KEYWORDS:
         if keyword in q:
@@ -70,37 +133,40 @@ def detect_mode(question: str) -> str:
     return "grounded"
 
 
-def build_prompt(question: str, context: str, chat_history: list) -> tuple:
-    """
-    Builds the full prompt to send to OpenAI.
-
-    Args:
-        question:     the user's latest message
-        context:      the retrieved chunks from Pinecone (joined as a string)
-        chat_history: list of past messages [{"role": "user"/"assistant", "content": "..."}]
-
-    Returns:
-        A tuple of (messages_array, mode_used)
-        messages_array is what gets sent directly to OpenAI chat completions
-    """
+def build_prompt(
+    question: str,
+    context: str,
+    chat_history: List[dict],
+    user_profile=None
+) -> tuple:
 
     mode = detect_mode(question)
+    profile_section = _build_profile_section(user_profile)
 
     if mode == "extended":
-        system_prompt = EXTENDED_SYSTEM_PROMPT.format(context=context)
+        system_prompt = EXTENDED_SYSTEM_PROMPT.format(
+            context=context,
+            profile_section=profile_section
+        )
     else:
-        system_prompt = GROUNDED_SYSTEM_PROMPT.format(context=context)
+        system_prompt = GROUNDED_SYSTEM_PROMPT.format(
+            context=context,
+            profile_section=profile_section
+        )
 
-    # Start with system message
+    # Clean up double blank lines when profile_section is empty
+    system_prompt = re.sub(r'\n{3,}', '\n\n', system_prompt).strip()
+
+    # System message
     messages = [
         {"role": "system", "content": system_prompt}
     ]
 
-    # Add last 10 messages of chat history for context
-    recent_history = chat_history[-10:] if len(chat_history) > 10 else chat_history
+    # 🔥 Reduced history (better signal-to-noise)
+    recent_history = chat_history[-6:] if len(chat_history) > 6 else chat_history
     messages.extend(recent_history)
 
-    # Add the current user question
+    # Current user question
     messages.append({"role": "user", "content": question})
 
     return messages, mode

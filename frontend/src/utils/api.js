@@ -6,14 +6,7 @@ const API = axios.create({
     ? `${import.meta.env.VITE_API_URL}/api`
     : "http://localhost:8000/api",
   withCredentials: true,   // sends JWT httpOnly cookie automatically
-
-  // Large PDF uploads (200-500MB base64) need a long timeout.
-  // 10 minutes covers the largest textbooks. Other routes are fast so
-  // this only matters when the request actually takes time.
-  timeout: 600_000, // 10 minutes
-
-  // Axios caps outgoing body size at 10MB by default — must raise this
-  // or large file uploads fail before they even leave the browser.
+  timeout: 600_000,
   maxBodyLength: Infinity,
   maxContentLength: Infinity,
 });
@@ -21,7 +14,7 @@ const API = axios.create({
 // ── Auth ─────────────────────────────────────────────────────────────────
 export const registerUser   = (data)       => API.post("/users/register", data);
 export const loginUser      = (data)       => API.post("/users/login", data);
-// Backend expects { idToken } — wrap the raw credential string here
+// Backend expects { idToken } — pass the raw credential string directly
 export const googleLogin    = (credential) => API.post("/users/google", { idToken: credential });
 export const logoutUser     = ()           => API.post("/users/logout");
 export const getCurrentUser = ()           => API.get("/users/me");
@@ -41,7 +34,7 @@ export const deleteSession  = (id)  => API.delete(`/sessions/${id}`);
 export const uploadDocument = (sessionId, formData) =>
   API.post(`/sessions/${sessionId}/documents`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
-    timeout: 600_000,        // 10 min — large PDFs take time end-to-end
+    timeout: 600_000,
     maxBodyLength: Infinity,
     maxContentLength: Infinity,
   });

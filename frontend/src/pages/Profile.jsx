@@ -36,21 +36,23 @@ export default function Profile() {
   const load = async () => {
     try {
       const { data } = await getProfile();
-      const p = data.userProfile   || {};
-      const s = data.studentDetails || {};
+      // ApiResponse wraps in data.data → { userProfile, studentDetails }
+      const payload = data.data ?? data;
+      const p = payload.userProfile    || {};
+      const s = payload.studentDetails || {};
       setForm({
-        education:    s.education    || "",
-        stream:       s.stream       || "",
-        yearOfPassing:s.yearOfPassing|| "",
-        courseBranch: s.courseBranch || "",
-        branch:       p.branch       || "",
-        year:         p.year         || "",
-        university:   p.university   || "",
-        bio:          p.bio          || "",
-        interests:    [...(s.interests||[]),...(p.interests||[])].filter((v,i,a)=>a.indexOf(v)===i),
-        domains:      p.domains      || [],
-        linkedinUrl:  p.linkedinUrl  || "",
-        githubUrl:    p.githubUrl    || "",
+        education:     s.education     || "",
+        stream:        s.stream        || "",
+        yearOfPassing: s.yearOfPassing || "",
+        courseBranch:  s.courseBranch  || "",
+        branch:        p.branch        || "",
+        year:          p.year          || "",
+        university:    p.university    || "",
+        bio:           p.bio           || "",
+        interests:     [...(s.interests||[]),...(p.interests||[])].filter((v,i,a)=>a.indexOf(v)===i),
+        domains:       p.domains       || [],
+        linkedinUrl:   p.linkedinUrl   || "",
+        githubUrl:     p.githubUrl     || "",
       });
     } catch(e) { console.error(e); }
     finally { setLoading(false); }

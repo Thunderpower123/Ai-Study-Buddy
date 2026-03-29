@@ -1,5 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.models.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 
@@ -14,13 +15,10 @@ const cookieOptions = {
 // 🔧 helper
 const generateTokens = async (userId) => {
     const user = await User.findById(userId);
-
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
-
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
-
     return { accessToken, refreshToken };
 };
 
@@ -29,43 +27,21 @@ export const registerUser = asyncHandler(async (req, res) => {
     const { name, email, age, password } = req.body;
 
     if (!name || !email || !password || age === undefined) {
-        return res.status(400).json({
-            success: false,
-            message: "All fields are required"
-        });
+        return res.status(400).json({ success: false, message: "All fields are required" });
     }
-
     if (age < 10) {
-        return res.status(400).json({
-            success: false,
-            message: "Age must be at least 10"
-        });
+        return res.status(400).json({ success: false, message: "Age must be at least 10" });
     }
 
     const existingUser = await User.findOne({ email });
-
     if (existingUser) {
-        return res.status(409).json({
-            success: false,
-            message: "Email already registered"
-        });
+        return res.status(409).json({ success: false, message: "Email already registered" });
     }
 
-    const user = await User.create({
-        name,
-        email,
-        age,
-        password,
-        provider: "local"
-    });
-
+    const user = await User.create({ name, email, age, password, provider: "local" });
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
-    return res.status(201).json({
-        success: true,
-        message: "User registered successfully",
-        user: createdUser
-    });
+    return res.status(201).json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
 
 // ---------------- LOGIN ----------------
@@ -73,20 +49,14 @@ export const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-
     if (!user) {
         return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
-
     if (user.provider !== "local") {
-        return res.status(400).json({
-            success: false,
-            message: "Please login using Google"
-        });
+        return res.status(400).json({ success: false, message: "Please login using Google" });
     }
 
     const isMatch = await user.isPasswordCorrect(password);
-
     if (!isMatch) {
         return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
@@ -95,46 +65,34 @@ export const loginUser = asyncHandler(async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     const { accessToken, refreshToken } = await generateTokens(user._id);
+    const loggedUser = await User.findById(user._id).select("-password -refreshToken");
 
     res
         .cookie("accessToken", accessToken, cookieOptions)
         .cookie("refreshToken", refreshToken, cookieOptions)
         .status(200)
-        .json({
-            success: true,
-            message: "Login successful",
-            user: await User.findById(user._id).select("-password -refreshToken")
-        });
+        .json(new ApiResponse(200, loggedUser, "Login successful"));
 });
 
 // ---------------- LOGOUT ----------------
 export const logoutUser = asyncHandler(async (req, res) => {
     if (req.user?._id) {
-        await User.findByIdAndUpdate(req.user._id, {
-            $unset: { refreshToken: 1 }
-        });
+        await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } });
     }
-
     res
         .clearCookie("accessToken", cookieOptions)
         .clearCookie("refreshToken", cookieOptions)
         .status(200)
-        .json({
-            success: true,
-            message: "Logged out successfully"
-        });
+        .json(new ApiResponse(200, {}, "Logged out successfully"));
 });
 
 // ---------------- REFRESH ----------------
 export const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingToken = req.cookies?.refreshToken || req.body?.refreshToken;
-
     if (!incomingToken) {
         return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    // jwt.verify throws on invalid/expired tokens — must catch and return 401
-    // Without this, asyncHandler catches it and the global error handler returns 500
     let decoded;
     try {
         decoded = jwt.verify(incomingToken, process.env.REFRESH_TOKEN_SECRET);
@@ -143,29 +101,49 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 
     const user = await User.findById(decoded._id);
-
     if (!user || user.refreshToken !== incomingToken) {
         return res.status(401).json({ success: false, message: "Invalid refresh token" });
     }
 
     const { accessToken, refreshToken } = await generateTokens(user._id);
-
     res
         .cookie("accessToken", accessToken, cookieOptions)
         .cookie("refreshToken", refreshToken, cookieOptions)
         .status(200)
-        .json({
-            success: true,
-            message: "Token refreshed"
-        });
+        .json(new ApiResponse(200, {}, "Token refreshed"));
 });
 
 // ---------------- CURRENT USER ----------------
 export const getCurrentUser = asyncHandler(async (req, res) => {
-    return res.status(200).json({
-        success: true,
-        user: req.user
-    });
+    return res.status(200).json({ success: true, user: req.user });
+});
+
+// ---------------- CHANGE PASSWORD ----------------
+export const changePassword = asyncHandler(async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ success: false, message: "Both passwords are required" });
+    }
+    if (newPassword.length < 8) {
+        return res.status(400).json({ success: false, message: "New password must be at least 8 characters" });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if (user.provider !== "local") {
+        return res.status(400).json({ success: false, message: "Google accounts cannot change password here" });
+    }
+
+    const isMatch = await user.isPasswordCorrect(currentPassword);
+    if (!isMatch) {
+        return res.status(401).json({ success: false, message: "Current password is incorrect" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"));
 });
 
 // ---------------- GOOGLE LOGIN ----------------
@@ -181,24 +159,13 @@ export const googleLogin = asyncHandler(async (req, res) => {
     const { sub, email, name, picture, email_verified } = payload;
 
     if (!email_verified) {
-        return res.status(400).json({
-            success: false,
-            message: "Google email not verified"
-        });
+        return res.status(400).json({ success: false, message: "Google email not verified" });
     }
 
-    let user = await User.findOne({
-        $or: [{ googleId: sub }, { email }]
-    });
+    let user = await User.findOne({ $or: [{ googleId: sub }, { email }] });
 
     if (!user) {
-        user = await User.create({
-            name,
-            email,
-            googleId: sub,
-            avatar: picture,
-            provider: "google"
-        });
+        user = await User.create({ name, email, googleId: sub, avatar: picture, provider: "google" });
     } else if (!user.googleId) {
         user.googleId = sub;
         user.provider = "google";
@@ -206,14 +173,11 @@ export const googleLogin = asyncHandler(async (req, res) => {
     }
 
     const { accessToken, refreshToken } = await generateTokens(user._id);
+    const loggedUser = await User.findById(user._id).select("-password -refreshToken");
 
     res
         .cookie("accessToken", accessToken, cookieOptions)
         .cookie("refreshToken", refreshToken, cookieOptions)
         .status(200)
-        .json({
-            success: true,
-            message: "Google login successful",
-            user: await User.findById(user._id).select("-password -refreshToken")
-        });
+        .json(new ApiResponse(200, loggedUser, "Google login successful"));
 });

@@ -10,7 +10,11 @@ export function AuthProvider({ children }) {
   // On mount, restore session from the httpOnly JWT cookie
   useEffect(() => {
     getCurrentUser()
-      .then(res => { if (res.data?.success) setUser(res.data.user); })
+      .then(res => {
+        // /me returns { success, user } directly (not wrapped in ApiResponse)
+        const u = res.data?.user ?? res.data?.data?.user ?? res.data?.data ?? null;
+        if (u) setUser(u);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -20,7 +24,6 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  // Called after StudentDetails form is submitted
   const markProfileComplete = () => {
     setUser(prev => prev ? { ...prev, isProfileComplete: true } : prev);
   };

@@ -46,17 +46,17 @@ export default function Dashboard() {
   const { user } = useAuth();
   const nav = useNavigate();
 
-  const [sessions,      setSessions]      = useState([]);
-  const [active,        setActive]        = useState(null);
-  const [msgs,          setMsgs]          = useState([]);
-  const [docs,          setDocs]          = useState([]);
-  const [input,         setInput]         = useState("");
-  const [mode,          setMode]          = useState("grounded");
-  const [sending,       setSending]       = useState(false);
-  const [uploading,     setUploading]     = useState(false);
-  const [docOpen,       setDocOpen]       = useState(false);
-  const [collapsed,     setCollapsed]     = useState(false);
-  const [mobOpen,       setMobOpen]       = useState(false);
+  const [sessions,  setSessions]  = useState([]);
+  const [active,    setActive]    = useState(null);
+  const [msgs,      setMsgs]      = useState([]);
+  const [docs,      setDocs]      = useState([]);
+  const [input,     setInput]     = useState("");
+  const [mode,      setMode]      = useState("grounded");
+  const [sending,   setSending]   = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [docOpen,   setDocOpen]   = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobOpen,   setMobOpen]   = useState(false);
 
   const bottomRef = useRef(null);
   const fileRef   = useRef(null);
@@ -74,8 +74,10 @@ export default function Dashboard() {
   const load = async () => {
     try {
       const { data } = await getAllSessions();
-      setSessions(data);
-      if (data.length > 0) openSession(data[0]);
+      // ApiResponse wraps payload in data.data
+      const list = data.data ?? data;
+      setSessions(Array.isArray(list) ? list : []);
+      if (list.length > 0) openSession(list[0]);
     } catch(e) { console.error(e); }
   };
 
@@ -84,15 +86,18 @@ export default function Dashboard() {
     setDocOpen(false); setMobOpen(false);
     try {
       const [h, d] = await Promise.all([getChatHistory(s._id), listDocuments(s._id)]);
-      setMsgs(h.data); setDocs(d.data);
+      // ApiResponse wraps in data.data
+      setMsgs(Array.isArray(h.data.data) ? h.data.data : (h.data.data ?? []));
+      setDocs(Array.isArray(d.data.data) ? d.data.data : (d.data.data ?? []));
     } catch { setMsgs([]); setDocs([]); }
   };
 
   const newSession = async () => {
     try {
       const { data } = await createSession();
-      setSessions(p => [data, ...p]);
-      openSession(data);
+      const session = data.data ?? data;
+      setSessions(p => [session, ...p]);
+      openSession(session);
     } catch(e) { console.error(e); }
   };
 
@@ -116,8 +121,15 @@ export default function Dashboard() {
     setSending(true);
     try {
       const { data } = await sendMessage(active._id, { content, mode });
-      setMsgs(p => [...p, { role:"assistant", content:data.answer, sources:data.sources, confidence:data.confidence, mode:data.mode }]);
-      setSessions(p => p.map(s => s._id === active._id ? { ...s, title: data.sessionTitle || s.title } : s));
+      // ApiResponse wraps in data.data
+      const payload = data.data ?? data;
+      setMsgs(p => [...p, {
+        role: "assistant",
+        content: payload.answer,
+        sources: payload.sources,
+        confidence: payload.confidence,
+        mode: payload.mode,
+      }]);
     } catch {
       setMsgs(p => [...p, { role:"assistant", content:"⚠️ Couldn't get a response. Please try again.", isError:true }]);
     } finally { setSending(false); }
@@ -133,7 +145,10 @@ export default function Dashboard() {
       const fd = new FormData();
       files.forEach(f => fd.append("files", f));
       const { data } = await uploadDocument(active._id, fd);
-      setDocs(p => [...p, ...(data.documents || [data])]);
+      // ApiResponse wraps in data.data → { documents, errors }
+      const payload = data.data ?? data;
+      const newDocs = payload.documents ?? (Array.isArray(payload) ? payload : []);
+      setDocs(p => [...p, ...newDocs]);
     } catch(e) { console.error(e); }
     finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
   };
@@ -265,13 +280,17 @@ export default function Dashboard() {
                       {m.sources?.length > 0 && (
                         <div className="msg-sources">
                           <span className="src-lbl">Sources</span>
-                          {m.sources.map((s, si) => <span key={si} className="src-chip">{s.filename} · p.{s.page}</span>)}
+                          {m.sources.map((s, si) => (
+                            <span key={si} className="src-chip">{s.filename} · {s.section}</span>
+                          ))}
                         </div>
                       )}
                       {m.confidence && (
                         <div className="msg-conf">
-                          <span className="conf-dot" style={{ background: m.confidence >= 0.8 ? "var(--ok)" : m.confidence >= 0.5 ? "var(--warn)" : "var(--err)" }} />
-                          {Math.round(m.confidence * 100)}% confident · {m.mode}
+                          <span className="conf-dot" style={{
+                            background: m.confidence === "high" ? "var(--ok)" : m.confidence === "medium" ? "var(--warn)" : "var(--err)"
+                          }} />
+                          {m.confidence} confidence · {m.mode}
                         </div>
                       )}
                     </div>

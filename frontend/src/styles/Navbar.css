@@ -84,7 +84,7 @@
 /* PFP dropdown */
 .pfp-drop {
   position: absolute; top: calc(100% + 8px); right: 0;
-  width: 210px; background: var(--bg-surface);
+  width: 220px; background: var(--bg-surface);
   border: 1px solid var(--bd); border-radius: 14px;
   overflow: hidden; box-shadow: var(--sh-lg);
   animation: scaleIn 0.18s cubic-bezier(0.16,1,0.3,1);
@@ -104,6 +104,26 @@
 .pfp-drop-item.danger { color: var(--err); }
 .pfp-drop-item.danger:hover { background: rgba(192,57,43,0.07); }
 .pfp-drop-hr { height: 1px; background: var(--bd); margin: 0.3rem 0.4rem; }
+
+/* ── Dark mode toggle item ────────────────────── */
+.dark-toggle-item {
+  justify-content: flex-start;
+}
+.dark-toggle-pill {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 20px;
+  background: var(--ac-light);
+  color: var(--ac);
+  letter-spacing: 0.04em;
+  transition: background 0.2s, color 0.2s;
+}
+[data-theme="dark"] .dark-toggle-pill {
+  background: var(--ac);
+  color: #fff;
+}
 
 /* Responsive */
 @media (max-width: 768px) {

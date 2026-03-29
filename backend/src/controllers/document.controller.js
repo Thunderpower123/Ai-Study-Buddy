@@ -6,7 +6,7 @@ import { Session } from "../models/session.models.js";
 import { ingestDocument } from "../services/ingest.service.js";
 import axios from "axios";
 
-const MAX_TOTAL_BYTES = 100 * 1024 * 1024; // 100 MB overall per request
+const MAX_TOTAL_BYTES = 500 * 1024 * 1024; // 500 MB overall per request
 
 const fileTypeMap = {
     "application/pdf": "pdf",
@@ -31,10 +31,10 @@ export const uploadDocument = asyncHandler(async (req, res) => {
         throw new ApiError(400, "No files uploaded");
     }
 
-    // Enforce 100 MB total across all files in this request
+    // Enforce 500 MB total across all files in this request
     const totalBytes = req.files.reduce((sum, f) => sum + f.size, 0);
     if (totalBytes > MAX_TOTAL_BYTES) {
-        throw new ApiError(400, "Total upload size exceeds 100 MB limit");
+        throw new ApiError(400, "Total upload size exceeds 500 MB limit");
     }
 
     // Process each file: ingest → save Document record

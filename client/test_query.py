@@ -26,4 +26,4 @@ def ask(question):
         print(f"\n--- CONFIDENCE: {data['confidence']} | MODE: {data['mode']} ---\n")
 
 # "explain further" forces extended mode + correct session
-ask("Are you an idiot")
+ask("explain further Are you an idiot, answer this in extended mode")

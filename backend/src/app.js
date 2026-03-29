@@ -70,15 +70,11 @@ app.use((req, res) => {
 // --------------------
 // Multer error handler
 // --------------------
-// Multer throws MulterError synchronously during file processing — it bypasses
-// asyncHandler entirely and lands here. Must be caught before the global handler
-// so we return a proper JSON shape instead of Express's default HTML error page.
 app.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {
-        // e.g. LIMIT_FILE_SIZE, LIMIT_FILE_COUNT, LIMIT_UNEXPECTED_FILE
         const messages = {
-            LIMIT_FILE_SIZE:      "File too large. Maximum size per file is 100 MB.",
-            LIMIT_FILE_COUNT:     "Too many files. Maximum is 20 files per upload.",
+            LIMIT_FILE_SIZE:       "File too large. Maximum size per file is 500 MB.",
+            LIMIT_FILE_COUNT:      "Too many files. Maximum is 20 files per upload.",
             LIMIT_UNEXPECTED_FILE: `Unexpected field name '${err.field}'. Use 'files' as the field name.`,
         };
         return res.status(400).json({

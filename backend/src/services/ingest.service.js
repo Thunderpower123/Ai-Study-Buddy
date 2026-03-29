@@ -19,15 +19,19 @@ export const ingestDocument = async ({ fileBuffer, filename, mimetype, sessionId
                     "x-service-key": process.env.SERVICE_KEY,
                     "Content-Type": "application/json",
                 },
-                // Large PDFs can take time to extract + embed + upsert to Pinecone.
-                // Without a timeout, a hung Python client blocks this request forever.
-                // 2 minutes is generous even for a 100MB file on a cold start.
-                timeout: 120_000,
+                // Large PDFs (200-500MB base64) need more time to extract + embed + upsert.
+                // 10 minutes covers even the largest textbooks on a cold start.
+                timeout: 600_000, // 10 minutes
+
+                // Axios has a default maxBodyLength / maxContentLength of 10MB.
+                // A 200MB PDF becomes ~267MB of base64 JSON — must raise this or
+                // axios silently rejects the outgoing request before it even hits Python.
+                maxBodyLength: Infinity,
+                maxContentLength: Infinity,
             }
         );
 
         if (!response.data?.success) {
-            // Surface the Python-side error message if one was returned
             const detail = response.data?.detail || response.data?.message || "Python ingest returned success: false";
             throw new ApiError(500, `Ingest failed: ${detail}`);
         }
@@ -35,11 +39,8 @@ export const ingestDocument = async ({ fileBuffer, filename, mimetype, sessionId
         return response.data.chunks_stored;
 
     } catch (error) {
-        // Preserve the original message rather than swallowing it.
-        // If it's already an ApiError (from the block above), re-throw it as-is.
         if (error instanceof ApiError) throw error;
 
-        // Axios network / timeout errors
         if (error.code === "ECONNABORTED") {
             throw new ApiError(504, `Ingest timed out for file: ${filename}`);
         }

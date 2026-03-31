@@ -11,22 +11,30 @@ import {
 import "../styles/theme.css";
 import "../styles/Dashboard.css";
 
-/* ── icons ────────────────────────────────────── */
+/* ── Icons ─────────────────────────────────────── */
 const Ico = ({ d, s = 16 }) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     {typeof d === "string" ? <path d={d} /> : d}
   </svg>
 );
-const IcoPlus   = () => <Ico d={<><path d="M12 5v14M5 12h14"/></>} />;
-const IcoChat   = () => <Ico d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />;
-const IcoTrash  = () => <Ico s={13} d={<><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" fill="none"/></>} />;
-const IcoGear   = () => <Ico s={15} d={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></>} />;
-const IcoSend   = () => <Ico s={15} d={<><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9" fill="none"/></>} />;
-const IcoUp     = () => <Ico s={15} d={<><polyline points="16,16 12,12 8,16" fill="none"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3" fill="none"/></>} />;
-const IcoX      = () => <Ico s={12} d={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />;
-const IcoLeft   = () => <Ico s={14} d="M15 18l-6-6 6-6" />;
-const IcoRight  = () => <Ico s={14} d="M9 18l6-6-6-6" />;
+const IcoPlus  = () => <Ico d={<><path d="M12 5v14M5 12h14"/></>} />;
+const IcoChat  = () => <Ico d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />;
+const IcoTrash = () => <Ico s={13} d={<><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" fill="none"/></>} />;
+const IcoGear  = () => <Ico s={15} d={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></>} />;
+const IcoSend  = () => <Ico s={15} d={<><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9" fill="none"/></>} />;
+const IcoX     = () => <Ico s={12} d={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />;
+const IcoBook  = () => <Ico s={56} d={<><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></>} />;
+
+/* Cloud upload icon — bigger, more visible */
+const IcoUploadCloud = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="16 16 12 12 8 16"/>
+    <line x1="12" y1="12" x2="12" y2="21"/>
+    <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+  </svg>
+);
 
 const ago = (d) => {
   const s = Math.floor((Date.now() - new Date(d)) / 1000);
@@ -42,6 +50,10 @@ const fIcon = (t = "") => {
   return "TXT";
 };
 
+const getSuggestions = (mode) => mode === "grounded"
+  ? ["Summarise these notes", "List key definitions", "What are the main topics?", "Explain this concept"]
+  : ["Explain quantum mechanics", "Give me study tips", "Create a quiz on this topic", "Simplify this for me"];
+
 export default function Dashboard() {
   const { user } = useAuth();
   const nav = useNavigate();
@@ -54,7 +66,6 @@ export default function Dashboard() {
   const [mode,      setMode]      = useState("grounded");
   const [sending,   setSending]   = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [docOpen,   setDocOpen]   = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [mobOpen,   setMobOpen]   = useState(false);
 
@@ -74,7 +85,6 @@ export default function Dashboard() {
   const load = async () => {
     try {
       const { data } = await getAllSessions();
-      // ApiResponse wraps payload in data.data
       const list = data.data ?? data;
       setSessions(Array.isArray(list) ? list : []);
       if (list.length > 0) openSession(list[0]);
@@ -83,12 +93,11 @@ export default function Dashboard() {
 
   const openSession = async (s) => {
     setActive(s); setMode(s.lastMode || "grounded");
-    setDocOpen(false); setMobOpen(false);
+    setMobOpen(false);
     try {
       const [h, d] = await Promise.all([getChatHistory(s._id), listDocuments(s._id)]);
-      // ApiResponse wraps in data.data
-      setMsgs(Array.isArray(h.data.data) ? h.data.data : (h.data.data ?? []));
-      setDocs(Array.isArray(d.data.data) ? d.data.data : (d.data.data ?? []));
+      setMsgs(Array.isArray(h.data?.data) ? h.data.data : (h.data?.data ?? []));
+      setDocs(Array.isArray(d.data?.data) ? d.data.data : (d.data?.data ?? []));
     } catch { setMsgs([]); setDocs([]); }
   };
 
@@ -121,17 +130,13 @@ export default function Dashboard() {
     setSending(true);
     try {
       const { data } = await sendMessage(active._id, { content, mode });
-      // ApiResponse wraps in data.data
       const payload = data.data ?? data;
       setMsgs(p => [...p, {
-        role: "assistant",
-        content: payload.answer,
-        sources: payload.sources,
-        confidence: payload.confidence,
-        mode: payload.mode,
+        role:"assistant", content:payload.answer,
+        sources:payload.sources, confidence:payload.confidence, mode:payload.mode,
       }]);
     } catch {
-      setMsgs(p => [...p, { role:"assistant", content:"⚠️ Couldn't get a response. Please try again.", isError:true }]);
+      setMsgs(p => [...p, { role:"assistant", content:"Could not get a response. Please try again.", isError:true }]);
     } finally { setSending(false); }
   };
 
@@ -145,7 +150,6 @@ export default function Dashboard() {
       const fd = new FormData();
       files.forEach(f => fd.append("files", f));
       const { data } = await uploadDocument(active._id, fd);
-      // ApiResponse wraps in data.data → { documents, errors }
       const payload = data.data ?? data;
       const newDocs = payload.documents ?? (Array.isArray(payload) ? payload : []);
       setDocs(p => [...p, ...newDocs]);
@@ -158,22 +162,27 @@ export default function Dashboard() {
     catch(e) { console.error(e); }
   };
 
+  const handleSidebarToggle = () => {
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) { setMobOpen(p => !p); }
+    else { setCollapsed(p => !p); }
+  };
+
   const initials = user?.name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0,2) || "?";
+  const suggestions = getSuggestions(mode);
 
   return (
     <div className="db-root">
       {mobOpen && <div className="sb-overlay" onClick={() => setMobOpen(false)} />}
 
-      {/* ── Sidebar ─────────────────────────── */}
+      {/* ── Sidebar — NO chevron arrow ───────── */}
       <aside className={`db-sidebar ${collapsed ? "collapsed" : ""} ${mobOpen ? "mob-open" : ""}`}>
+        {/* top: just brand, no arrow button */}
         <div className="sb-top">
           <div className="sb-brand">
             <div className="sb-brand-box">A</div>
             <span className="sb-brand-name">AcadAI</span>
           </div>
-          <button className="sb-chevron" onClick={() => setCollapsed(p => !p)}>
-            {collapsed ? <IcoRight /> : <IcoLeft />}
-          </button>
         </div>
 
         <button className="sb-new" onClick={newSession}><IcoPlus /> New Session</button>
@@ -184,7 +193,7 @@ export default function Dashboard() {
             ? <div className="sb-empty">No sessions yet.<br />Create one to start studying.</div>
             : sessions.map((s, i) => (
               <div key={s._id} className={`sb-item ${active?._id === s._id ? "on" : ""}`}
-                style={{ animationDelay: `${i * 0.04}s` }}
+                style={{ animationDelay:`${i * 0.04}s` }}
                 onClick={() => openSession(s)}
               >
                 <IcoChat />
@@ -205,70 +214,94 @@ export default function Dashboard() {
 
       {/* ── Main ─────────────────────────────── */}
       <div className="db-main">
+        {/* Navbar — no files pill, no top upload button */}
         <Navbar
           mode={mode} onModeChange={setMode}
-          docCount={docs.length}
-          onFilesClick={active ? () => setDocOpen(p => !p) : undefined}
-          filesActive={docOpen}
           sessionTitle={active?.title}
-          onSidebarToggle={() => setMobOpen(p => !p)}
+          onSidebarToggle={handleSidebarToggle}
         />
-
-        {/* Doc panel */}
-        {docOpen && active && (
-          <div className="doc-panel">
-            <div className="doc-panel-head">
-              <span className="doc-panel-title">Study Materials</span>
-              <button className="doc-add" onClick={() => fileRef.current?.click()} disabled={uploading}>
-                <IcoUp /> {uploading ? "Uploading…" : "Add Files"}
-              </button>
-              <input ref={fileRef} type="file" multiple hidden
-                accept=".pdf,.pptx,.ppt,.docx,.doc,.txt,.md" onChange={upload} />
-            </div>
-            <div className="doc-row">
-              {docs.length === 0
-                ? <span className="doc-empty">No files yet — upload PDFs, PPTX, DOCX, or TXT</span>
-                : docs.map(d => (
-                  <div key={d._id} className="doc-chip">
-                    <span className="doc-chip-badge">{fIcon(d.fileType)}</span>
-                    <span className="doc-chip-name">{d.filename}</span>
-                    <button className="doc-chip-del" onClick={() => delDoc(d._id)}><IcoX /></button>
-                  </div>
-                ))
-              }
-            </div>
-          </div>
-        )}
 
         {/* Chat */}
         <div className="db-chat">
           {!active ? (
+            /* ── Welcome / no session selected ── */
             <div className="chat-welcome">
-              <div className="welcome-icon-wrap">📚</div>
+              <div className="welcome-icon-wrap"><IcoBook /></div>
               <h2 className="anim-up">Welcome back, {user?.name?.split(" ")[0] || "Scholar"}</h2>
               <p className="anim-up d1">Create a session, upload your study materials, and chat with AI about them.</p>
               <div className="welcome-btn-wrap">
                 <button className="btn-primary" onClick={newSession}><IcoPlus /> New Session</button>
               </div>
               <div className="welcome-starters">
-                {["Summarise my notes","Explain key concepts","Quiz me","Create a study plan"].map(q => (
+                {suggestions.map(q => (
                   <button key={q} className="starter" onClick={() => { newSession(); setInput(q); }}>{q}</button>
                 ))}
               </div>
             </div>
           ) : (
             <>
+              {/* Messages */}
               <div className="chat-msgs">
                 {msgs.length === 0 && (
-                  <div style={{ padding:"2.5rem 1rem", textAlign:"center" }}>
-                    <p style={{ color:"var(--tx-2)", marginBottom:"1rem", fontSize:"0.95rem" }}>
-                      Upload documents using the Files button above, then ask anything about them.
-                    </p>
-                    <div className="welcome-starters" style={{ justifyContent:"center" }}>
-                      {["Summarise my notes","Key concepts?","Quiz me","Simplify this"].map(q => (
+                  <div className="chat-empty-state">
+                    <p>Ask anything about your documents once you upload them below.</p>
+                    <div className="welcome-starters">
+                      {suggestions.map(q => (
                         <button key={q} className="starter" onClick={() => setInput(q)}>{q}</button>
                       ))}
                     </div>
+
+                    {/* ── Upload zone — below suggestions ── */}
+                    <div className="upload-zone" onClick={() => fileRef.current?.click()}>
+                      <div className="upload-zone-icon">
+                        <IcoUploadCloud />
+                      </div>
+                      <div className="upload-zone-text">
+                        <span className="upload-zone-label">
+                          {uploading ? "Uploading…" : "Upload"}
+                        </span>
+                        <span className="upload-zone-sub">PDF, PPTX, DOCX, TXT — click or drag to upload</span>
+                      </div>
+                      {docs.length > 0 && (
+                        <span className="upload-zone-count">{docs.length} file{docs.length !== 1 ? "s" : ""} added</span>
+                      )}
+                    </div>
+
+                    {/* Show uploaded docs */}
+                    {docs.length > 0 && (
+                      <div className="doc-chips-row">
+                        {docs.map(d => (
+                          <div key={d._id} className="doc-chip">
+                            <span className="doc-chip-badge">{fIcon(d.fileType)}</span>
+                            <span className="doc-chip-name">{d.filename}</span>
+                            <button className="doc-chip-del" onClick={(e) => { e.stopPropagation(); delDoc(d._id); }}><IcoX /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <input ref={fileRef} type="file" multiple hidden
+                      accept=".pdf,.pptx,.ppt,.docx,.doc,.txt,.md" onChange={upload} />
+                  </div>
+                )}
+
+                {/* Once there are messages, show a compact doc upload bar at top of msgs */}
+                {msgs.length > 0 && (
+                  <div className="msgs-doc-bar">
+                    <button className="msgs-doc-btn" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                      <IcoUploadCloud />
+                      <span>{uploading ? "Uploading…" : "Upload"}</span>
+                      {docs.length > 0 && <span className="msgs-doc-count">{docs.length} file{docs.length !== 1 ? "s" : ""}</span>}
+                    </button>
+                    {docs.map(d => (
+                      <div key={d._id} className="doc-chip small">
+                        <span className="doc-chip-badge">{fIcon(d.fileType)}</span>
+                        <span className="doc-chip-name">{d.filename}</span>
+                        <button className="doc-chip-del" onClick={() => delDoc(d._id)}><IcoX /></button>
+                      </div>
+                    ))}
+                    <input ref={fileRef} type="file" multiple hidden
+                      accept=".pdf,.pptx,.ppt,.docx,.doc,.txt,.md" onChange={upload} />
                   </div>
                 )}
 
@@ -280,16 +313,12 @@ export default function Dashboard() {
                       {m.sources?.length > 0 && (
                         <div className="msg-sources">
                           <span className="src-lbl">Sources</span>
-                          {m.sources.map((s, si) => (
-                            <span key={si} className="src-chip">{s.filename} · {s.section}</span>
-                          ))}
+                          {m.sources.map((s, si) => <span key={si} className="src-chip">{s.filename} · {s.section}</span>)}
                         </div>
                       )}
                       {m.confidence && (
                         <div className="msg-conf">
-                          <span className="conf-dot" style={{
-                            background: m.confidence === "high" ? "var(--ok)" : m.confidence === "medium" ? "var(--warn)" : "var(--err)"
-                          }} />
+                          <span className="conf-dot" style={{ background: m.confidence === "high" ? "var(--ok)" : m.confidence === "medium" ? "var(--warn)" : "var(--err)" }} />
                           {m.confidence} confidence · {m.mode}
                         </div>
                       )}
@@ -309,20 +338,20 @@ export default function Dashboard() {
                 <div ref={bottomRef} />
               </div>
 
+              {/* Input */}
               <div className="chat-input-wrap">
                 <div className="chat-input-box">
                   <textarea ref={taRef} className="chat-ta"
                     value={input} onChange={e => setInput(e.target.value)} onKeyDown={onKey}
-                    placeholder={mode === "grounded" ? "Ask about your documents…" : "Ask anything — I'll use your notes + general knowledge…"}
+                    placeholder={mode === "grounded" ? "Ask about your documents…" : "Ask anything…"}
                     rows={1} disabled={sending}
                   />
                   <div className="input-btns">
-                    <button className="attach-btn" onClick={() => fileRef.current?.click()} title="Attach files"><IcoUp /></button>
                     <button className="send-btn" onClick={send} disabled={!input.trim() || sending}><IcoSend /></button>
                   </div>
                 </div>
                 <p className="input-hint">
-                  {mode === "grounded" ? "⚓ Grounded — answers only from your uploaded documents" : "🌐 General — extends your notes with broader knowledge"}
+                  {mode === "grounded" ? "Grounded — answers only from your uploaded documents" : "General — extends your notes with broader knowledge"}
                 </p>
               </div>
             </>

@@ -66,10 +66,14 @@ export default function SessionPage() {
       const [sRes, hRes, dRes] = await Promise.all([
         getSession(id), getChatHistory(id), listDocuments(id),
       ]);
-      setSession(sRes.data);
-      setMsgs(hRes.data);
-      setDocs(dRes.data);
-      setMode(sRes.data.lastMode || "grounded");
+      // Backend wraps all responses in ApiResponse → payload is in .data.data
+      const session = sRes.data?.data ?? sRes.data;
+      const msgs    = hRes.data?.data ?? hRes.data;
+      const docs    = dRes.data?.data ?? dRes.data;
+      setSession(session);
+      setMsgs(Array.isArray(msgs) ? msgs : []);
+      setDocs(Array.isArray(docs) ? docs : []);
+      setMode(session?.lastMode || "grounded");
     } catch (e) {
       console.error(e);
     } finally { setLoading(false); }
@@ -83,12 +87,14 @@ export default function SessionPage() {
     setSending(true);
     try {
       const { data } = await sendMessage(id, { content, mode });
+      // Backend wraps in ApiResponse → payload is in data.data
+      const payload = data?.data ?? data;
       setMsgs(p => [...p, {
         role: "assistant",
-        content: data.answer,
-        sources: data.sources,
-        confidence: data.confidence,
-        mode: data.mode,
+        content: payload.answer,
+        sources: payload.sources,
+        confidence: payload.confidence,
+        mode: payload.mode,
       }]);
     } catch {
       setMsgs(p => [...p, { role: "assistant", content: "⚠️ Couldn't get a response. Try again.", isError: true }]);
@@ -107,7 +113,10 @@ export default function SessionPage() {
       const fd = new FormData();
       files.forEach(f => fd.append("files", f));
       const { data } = await uploadDocument(id, fd);
-      setDocs(p => [...p, ...(data.documents || [data])]);
+      // Backend wraps in ApiResponse → payload is in data.data → { documents, errors }
+      const payload = data?.data ?? data;
+      const newDocs = payload.documents ?? (Array.isArray(payload) ? payload : []);
+      setDocs(p => [...p, ...newDocs]);
     } catch (e) { console.error(e); }
     finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
   };

@@ -71,25 +71,28 @@
   venv\Scripts\activate          <- activate venv first
 
   Run all tests at once:
-    python -m pytest tests/ -v
+    python -m pytest tests/ -v -s
 
   Run individual test files:
-    python -m pytest tests/test_ingest.py -v       <- ingest pipeline
-    python -m pytest tests/test_retrieve.py -v     <- retrieval + MMR
-    python -m pytest tests/test_chatbot.py -v      <- chatbot + /query endpoint
+    python -m pytest tests/test_ingest.py -v -s      <- ingest pipeline (Python client only)
+    python -m pytest tests/test_retrieve.py -v -s    <- retrieval + MMR (Python client only)
+    python -m pytest tests/test_chatbot.py -v -s     <- chatbot + /query endpoint (Python client only)
+    python -m pytest tests/test_pipeline.py -v -s    <- FULL end-to-end (Node + Python, BOTH must run)
 
   WARNING — Run order for live tests:
-    1. Make sure the Python client server is running on :8001
-       (test_chatbot.py and test_ingest.py hit HTTP endpoints directly)
-    2. Run test_ingest.py FIRST — it seeds Pinecone with test data
-    3. Then run test_retrieve.py and test_chatbot.py
-       (they depend on the data seeded by test_ingest.py)
+    1. Start Node backend on :8000  (cd backend && npm run dev)
+    2. Start Python client on :8001 (cd client && uvicorn main:app --reload --port 8001)
+    3. For test_pipeline.py ONLY: both servers must be running
+    4. For other tests: only Python client (:8001) is needed
+    5. Run test_ingest.py BEFORE test_retrieve.py and test_chatbot.py
+       (they depend on Pinecone data seeded by test_ingest.py)
 
   Run a single specific test by name:
-    python -m pytest tests/test_ingest.py::test_get_embedding_returns_vector -v
-    python -m pytest tests/test_chatbot.py::test_health_endpoint -v
+    python -m pytest tests/test_ingest.py::test_get_embedding_returns_vector -v -s
+    python -m pytest tests/test_chatbot.py::test_health_endpoint -v -s
+    python -m pytest tests/test_pipeline.py::test_07_chat_pipeline_grounded -v -s
 
-  Run only fast local tests (skip all live API calls):
+  Run only fast local tests (no live API calls, no asyncio):
     python -m pytest tests/ -v -k "not asyncio"
 
   Show print() output while running (useful for debugging):

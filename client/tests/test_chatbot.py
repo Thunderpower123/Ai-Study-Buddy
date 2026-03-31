@@ -245,15 +245,22 @@ async def test_query_missing_question_field():
 
 
 @pytest.mark.asyncio
-async def test_query_missing_session_id_field():
-    async with httpx.AsyncClient(timeout=10) as client:
+async def test_query_missing_session_id_succeeds_gracefully():
+    """
+    sessionId is Optional in QueryRequest — missing it should NOT 422.
+    Instead the pipeline runs against an empty session and returns a fallback.
+    """
+    async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(
             f"{BASE_URL}/query",
-            json={"question": "What is X?"},  # missing 'sessionId'
+            json={"question": "What is X?"},  # sessionId intentionally omitted
             headers={"x-service-key": SERVICE_KEY}
         )
-    assert resp.status_code == 422, f"Expected 422 for missing field, got {resp.status_code}"
-    print(f"[VALIDATION] Missing 'sessionId' correctly returned 422")
+    # 200 with a fallback answer (empty namespace = no context = anti-hallucination stop)
+    assert resp.status_code == 200, f"Expected 200 for missing sessionId, got {resp.status_code}: {resp.text}"
+    data = resp.json()
+    assert data["success"] is True
+    print(f"[VALIDATION] Missing sessionId handled gracefully: answer={data['answer'][:80]}")
 
 
 # ── 9. Redis chat history — save and load ────────────────────────────────────

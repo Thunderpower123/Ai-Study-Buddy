@@ -10,14 +10,14 @@ logger = get_logger(__name__)
 # Single shared async client (module-level)
 client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
+# Modes that generate long structured output — quiz, summary, detailed notes, study plan, etc.
+# These need a much higher token ceiling or GPT cuts off mid-response.
+LONG_OUTPUT_MODES = {"quiz", "summarise", "key_concepts", "study_plan", "detail"}
+
 
 def _clean_text(text: str) -> str:
     """
     Basic text cleaning before sending to embedding model.
-
-    - Strips leading/trailing whitespace
-    - Collapses excessive internal whitespace
-    - Guards against None / empty input
     """
     if not text:
         return ""
@@ -28,15 +28,10 @@ def _clean_text(text: str) -> str:
 async def get_embedding(text: str) -> List[float]:
     """
     Generates an embedding vector for the given text.
-
     Model: text-embedding-3-small (~1536 dimensions)
-
-    Returns:
-        List[float]: embedding vector
     """
     try:
         cleaned = _clean_text(text)
-
         if not cleaned:
             logger.warning("Empty text received for embedding.")
             return []
@@ -45,27 +40,20 @@ async def get_embedding(text: str) -> List[float]:
             model="text-embedding-3-small",
             input=cleaned
         )
-
         embedding = response.data[0].embedding
-
         logger.info("Embedding generated successfully.")
         return embedding
 
     except Exception as e:
         logger.error(f"Error generating embedding: {e}")
-        raise  # required so retry decorator can catch
+        raise
 
 
 @async_retry(retries=3, delay=1.0)
 async def get_embeddings_batch(texts: List[str]) -> List[List[float]]:
     """
     Generates embeddings for a list of texts in a single API call.
-
     OpenAI supports up to 2048 inputs per request.
-    Use this instead of calling get_embedding() in a loop — much faster.
-
-    Returns:
-        List[List[float]]: one embedding vector per input text, in order.
     """
     try:
         if not texts:
@@ -73,8 +61,6 @@ async def get_embeddings_batch(texts: List[str]) -> List[List[float]]:
             return []
 
         cleaned = [_clean_text(t) for t in texts]
-
-        # Filter out empty strings but track positions so we can re-align
         indexed = [(i, t) for i, t in enumerate(cleaned) if t]
 
         if not indexed:
@@ -88,7 +74,6 @@ async def get_embeddings_batch(texts: List[str]) -> List[List[float]]:
             input=list(valid_texts)
         )
 
-        # Re-align results back to original positions
         result: List[List[float]] = [[] for _ in texts]
         for rank, original_idx in enumerate(indices):
             result[original_idx] = response.data[rank].embedding
@@ -98,39 +83,43 @@ async def get_embeddings_batch(texts: List[str]) -> List[List[float]]:
 
     except Exception as e:
         logger.error(f"Error generating batch embeddings: {e}")
-        raise  # required for retry
+        raise
 
 
 @async_retry(retries=3, delay=1.0)
-async def get_chat_response(messages: List[Dict]) -> str:
+async def get_chat_response(messages: List[Dict], mode: str = "grounded") -> str:
     """
     Generates a chat completion from OpenAI.
-
     Model: gpt-4o-mini
 
-    Args:
-        messages: List of dicts with role/content
+    max_tokens scales with mode:
+    - Long output modes (quiz, summarise, notes, study plan): 4000 tokens
+    - Normal grounded/extended: 1500 tokens
 
-    Returns:
-        str: assistant's reply
+    This prevents GPT from cutting off a quiz mid-question or
+    truncating a detailed explanation.
     """
     try:
         if not messages:
             logger.warning("Empty messages list passed to chat.")
             return ""
 
+        # Scale token limit based on what GPT needs to produce
+        max_tokens = 4000 if mode in LONG_OUTPUT_MODES else 1500
+
+        logger.info(f"Chat request | mode={mode} | max_tokens={max_tokens}")
+
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
-            max_tokens=1000,
+            max_tokens=max_tokens,
             temperature=0.3
         )
 
         reply = response.choices[0].message.content.strip()
-
         logger.info("Chat response generated successfully.")
         return reply
 
     except Exception as e:
         logger.error(f"Error generating chat response: {e}")
-        raise  # required for retry
+        raise

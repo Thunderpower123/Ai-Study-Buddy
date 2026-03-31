@@ -60,12 +60,19 @@ class QueryRequest(BaseModel):
     session_id: Optional[str] = None  # Node sends this
     userProfile: Optional[UserProfile] = None
     user_profile: Optional[UserProfile] = None  # Node sends this
+    # mode hint from the frontend toggle: "grounded" | "general"
+    # Python auto-detects mode from keywords but honours this when provided
+    mode: Optional[str] = None
 
     def get_session_id(self) -> str:
         return self.sessionId or self.session_id or ""
 
     def get_user_profile(self) -> Optional[UserProfile]:
         return self.userProfile or self.user_profile
+
+    def get_mode_hint(self) -> Optional[str]:
+        """Returns the mode hint from Node ("grounded" or "general"), or None."""
+        return self.mode
 
 
 class QueryResponse(BaseModel):

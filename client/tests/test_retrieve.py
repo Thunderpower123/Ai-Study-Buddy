@@ -138,18 +138,21 @@ def test_mmr_top_k_respected():
 
 # ── 4. Prompt Builder ────────────────────────────────────────────────────────
 def test_prompt_builder_grounded_mode():
-    from chatbot.prompt_builder import detect_mode
-    assert detect_mode("What is Newton second law?") == "grounded"
-    assert detect_mode("Define photosynthesis") == "grounded"
+    from chatbot.prompt_builder import detect_meta_command, detect_extended_mode
+    # Normal factual questions should NOT trigger meta or extended
+    assert detect_meta_command("What is Newton second law?") is None
+    assert detect_extended_mode("What is Newton second law?") is False
+    assert detect_meta_command("Define photosynthesis") is None
+    assert detect_extended_mode("Define photosynthesis") is False
 
 
 def test_prompt_builder_extended_mode():
-    from chatbot.prompt_builder import detect_mode
-    assert detect_mode("Can you explain more about this?") == "extended"
-    assert detect_mode("Give me an example of this") == "extended"
-    assert detect_mode("Simplify this for me") == "extended"
-    assert detect_mode("I dont understand this") == "extended"
-    assert detect_mode("Break it down please") == "extended"
+    from chatbot.prompt_builder import detect_extended_mode
+    assert detect_extended_mode("Can you explain more about this?") is True
+    assert detect_extended_mode("Give me an example of this") is True
+    assert detect_extended_mode("Simplify this for me") is True
+    assert detect_extended_mode("I dont understand this") is True
+    assert detect_extended_mode("Break it down please") is True
     print("\n[PROMPT] All extended-mode keywords correctly detected")
 
 

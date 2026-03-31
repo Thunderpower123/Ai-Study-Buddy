@@ -2,7 +2,7 @@ import base64
 import json
 import urllib.request
 
-PDF_PATH = r'C:\Users\HP\Desktop\electrical-machinery-7thnbsped-9788174091734_compress (1).pdf'
+PDF_PATH = r"C:\Users\HP\Desktop\8051 Microcontroller book Mazidi.pdf"
 
 print("Reading and encoding PDF...")
 with open(PDF_PATH, 'rb') as f:
@@ -12,10 +12,10 @@ print(f"Encoded. Size: {len(b64)} chars. Sending to /ingest...")
 
 payload = json.dumps({
     'file_b64': b64,
-    'filename': 'electrical-machinery-7thnbsped.pdf',
+    'filename': '8051 Microcontroller book Mazidi.pdf',
     'mimetype': 'application/pdf',
-    'sessionId': 'test-session-002',
-    'documentId': 'test-doc-002'
+    'sessionId': 'test-session-003',
+    'documentId': 'test-doc-003'
 }).encode()
 
 req = urllib.request.Request(

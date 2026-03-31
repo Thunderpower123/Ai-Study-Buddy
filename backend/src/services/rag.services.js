@@ -39,7 +39,7 @@ const query = async ({ question, sessionId, userId, mode = "grounded" }) => {
 
   // AbortController gives us a proper timeout for fetch (fetch has none built-in)
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+  const timeout = setTimeout(() => controller.abort(), 120000); // 120s timeout — RAG pipeline (embed + search + GPT) can take 60-90s
 
   let response;
   try {
@@ -53,14 +53,16 @@ const query = async ({ question, sessionId, userId, mode = "grounded" }) => {
         question,
         session_id: sessionId.toString(),
         user_profile: profile,
-        // mode is intentionally omitted — Python detects mode via keyword analysis
-        // sending it here was dead weight since Python's detect_mode() overrides it
+        // Pass mode from frontend toggle so Python can honour the user's explicit choice.
+        // Python's detect_mode() still runs but Node's mode acts as a hint/override
+        // when the user explicitly flips the toggle to "general" / "extended".
+        mode,
       }),
       signal: controller.signal,
     });
   } catch (err) {
     if (err.name === "AbortError") {
-      throw new Error("Python client /query timed out after 30s");
+      throw new Error("Python client /query timed out after 120s");
     }
     throw err;
   } finally {

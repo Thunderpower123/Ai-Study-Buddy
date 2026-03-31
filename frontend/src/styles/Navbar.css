@@ -8,28 +8,32 @@
   border-bottom: 1px solid var(--bd);
   position: sticky; top: 0; z-index: 50;
   flex-shrink: 0;
-  animation: fadeIn 0.3s ease;
 }
 
+/* Brand */
 .nav-brand {
   display: flex; align-items: center; gap: 0.6rem;
-  font-family: 'Playfair Display', serif;
+  font-family: 'Lora', serif;
   font-size: 1.1rem; font-weight: 700; color: var(--tx);
   text-decoration: none; flex-shrink: 0;
 }
 .nav-brand-box {
   width: 30px; height: 30px; background: var(--ac);
   border-radius: 8px; display: flex; align-items: center; justify-content: center;
-  font-size: 0.85rem; font-weight: 900; color: #fff; flex-shrink: 0;
+  font-family: 'Lora', serif;
+  font-size: 0.88rem; font-weight: 700; color: #fff; flex-shrink: 0;
 }
 
+/* Hamburger — ALWAYS visible, re-opens sidebar */
 .nav-menu-btn {
-  display: none; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center; justify-content: center;
   width: 34px; height: 34px; border-radius: 8px;
-  color: var(--tx-3); transition: all 0.2s;
+  color: var(--tx-3); transition: all 0.2s; flex-shrink: 0;
 }
 .nav-menu-btn:hover { background: var(--bg-raised); color: var(--tx); }
 
+/* Session title breadcrumb */
 .nav-session-title {
   font-size: 0.82rem; color: var(--tx-3);
   border-left: 1px solid var(--bd); padding-left: 0.8rem; margin-left: 0.2rem;
@@ -46,19 +50,17 @@
   display: flex; align-items: center; gap: 0.35rem;
   padding: 0.38rem 0.95rem; border-radius: 8px;
   font-size: 0.82rem; font-weight: 600; color: var(--tx-3);
-  transition: all 0.25s cubic-bezier(0.16,1,0.3,1); white-space: nowrap;
+  transition: all 0.22s cubic-bezier(0.16,1,0.3,1); white-space: nowrap;
   border: none; background: none; cursor: pointer;
 }
 .mode-btn:hover { color: var(--tx-2); }
-.mode-btn.active {
-  background: var(--ac); color: #fff;
-  box-shadow: 0 1px 8px var(--ac-glow);
-}
-.mode-btn.active.ext { background: #1a73e8; }
+.mode-btn.active { background: var(--ac); color: #fff; box-shadow: 0 1px 8px var(--ac-glow); }
+.mode-btn.active.ext { background: var(--ac-h); }
 
-/* Right */
+/* Right side */
 .nav-right { display: flex; align-items: center; gap: 0.55rem; flex-shrink: 0; }
 
+/* Files pill */
 .nav-files-pill {
   display: flex; align-items: center; gap: 0.4rem;
   padding: 0.34rem 0.8rem; background: var(--bg-raised);
@@ -69,7 +71,7 @@
 .nav-files-pill:hover { border-color: var(--ac); color: var(--ac); background: var(--ac-light); }
 .nav-files-pill.on { background: var(--ac-light); border-color: var(--ac); color: var(--ac); }
 
-/* PFP */
+/* Profile picture button */
 .nav-pfp-wrap { position: relative; }
 .nav-pfp-btn {
   width: 34px; height: 34px; border-radius: 50%;
@@ -102,32 +104,22 @@
 }
 .pfp-drop-item:hover { background: var(--bg-raised); color: var(--tx); }
 .pfp-drop-item.danger { color: var(--err); }
-.pfp-drop-item.danger:hover { background: rgba(192,57,43,0.07); }
+.pfp-drop-item.danger:hover { background: rgba(200,50,40,0.07); }
 .pfp-drop-hr { height: 1px; background: var(--bd); margin: 0.3rem 0.4rem; }
 
-/* ── Dark mode toggle item ────────────────────── */
-.dark-toggle-item {
-  justify-content: flex-start;
-}
+/* Dark mode toggle item */
+.dark-toggle-item { justify-content: flex-start; }
 .dark-toggle-pill {
-  margin-left: auto;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 0.15rem 0.45rem;
-  border-radius: 20px;
-  background: var(--ac-light);
-  color: var(--ac);
-  letter-spacing: 0.04em;
-  transition: background 0.2s, color 0.2s;
+  margin-left: auto; font-size: 0.68rem; font-weight: 700;
+  padding: 0.15rem 0.45rem; border-radius: 20px;
+  background: var(--ac-light); color: var(--ac);
+  letter-spacing: 0.04em; transition: background 0.2s, color 0.2s;
 }
-[data-theme="dark"] .dark-toggle-pill {
-  background: var(--ac);
-  color: #fff;
-}
+[data-theme="dark"] .dark-toggle-pill { background: var(--ac); color: #fff; }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .nav-menu-btn { display: flex; }
+  /* hamburger already always visible */
   .nav-brand span { display: none; }
   .nav-session-title { display: none; }
 }
